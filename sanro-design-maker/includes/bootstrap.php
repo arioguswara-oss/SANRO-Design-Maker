@@ -63,7 +63,12 @@ function sanro_dm_render_editor() {
     ?>
     <main class="sanro-dm" data-sanro-dm aria-label="<?php echo esc_attr__('SANRO Design Maker', 'sanro-design-maker'); ?>">
       <header class="sanro-dm__header">
-        <a class="sanro-dm__brand" href="<?php echo esc_url(home_url('/design-maker/')); ?>">SANRO <span>DESIGN MAKER</span></a>
+        <div class="sanro-dm__brand-group">
+          <a class="sanro-dm__brand" href="<?php echo esc_url(home_url('/design-maker/')); ?>">SANRO <span>DESIGN MAKER</span></a>
+          <a class="sanro-dm__home" data-home-link href="<?php echo esc_url(home_url('/')); ?>" aria-label="Kembali ke halaman utama" title="Beranda">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10.8 12 3l9 7.8v9.1a1.1 1.1 0 0 1-1.1 1.1h-5.2v-6.4H9.3V21H4.1A1.1 1.1 0 0 1 3 19.9z" fill="currentColor"/></svg>
+          </a>
+        </div>
         <div class="sanro-dm__header-actions">
           <button type="button" data-action="undo" aria-label="<?php echo esc_attr__('Undo', 'sanro-design-maker'); ?>" title="Undo">↶</button>
           <button type="button" data-action="redo" aria-label="<?php echo esc_attr__('Redo', 'sanro-design-maker'); ?>" title="Redo">↷</button>

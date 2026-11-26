@@ -1,4 +1,139 @@
 /* Fullscreen editor shell: keep the canvas, print action and tools in one bounded app layout. */
+body.sanro-dm-fullscreen .entry-header,
+body.sanro-dm-fullscreen .page-header,
+body.sanro-dm-fullscreen .wp-block-post-title,
+body.sanro-dm-fullscreen .entry-title {
+  display: none !important;
+}
+
+body.sanro-dm-fullscreen .wp-site-blocks,
+body.sanro-dm-fullscreen #page,
+body.sanro-dm-fullscreen #content,
+body.sanro-dm-fullscreen .site-content,
+body.sanro-dm-fullscreen main.wp-block-group,
+body.sanro-dm-fullscreen .entry-content,
+body.sanro-dm-fullscreen .wp-block-post-content,
+body.sanro-dm-fullscreen article,
+body.sanro-dm-fullscreen #primary,
+body.sanro-dm-fullscreen .site-main {
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+  transform: none !important;
+  contain: none !important;
+}
+
+body.sanro-dm-fullscreen .sanro-dm__brand-group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+body.sanro-dm-fullscreen .sanro-dm__home {
+  display: inline-flex;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #41474f;
+  border-radius: 8px;
+  background: #252a31;
+  color: #fff;
+  text-decoration: none;
+}
+
+body.sanro-dm-fullscreen .sanro-dm__home svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+body.sanro-dm-fullscreen .sanro-dm__home:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (min-width: 761px) {
+  body.sanro-dm-fullscreen .sanro-dm {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    max-width: none !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__header {
+    flex: 0 0 64px;
+    width: 100%;
+    min-width: 0;
+    min-height: 64px;
+    box-sizing: border-box;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__workspace {
+    display: grid !important;
+    flex: 1 1 0 !important;
+    grid-template-columns: minmax(84px, 96px) minmax(0, 1fr) minmax(280px, 320px);
+    width: 100%;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__rail,
+  body.sanro-dm-fullscreen .sanro-dm__stage-wrap,
+  body.sanro-dm-fullscreen .sanro-dm__properties {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__rail {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__stage-wrap {
+    width: 100%;
+    padding: clamp(12px, 2vw, 32px);
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__stage {
+    flex: 0 1 auto !important;
+    width: min(100%, 1000px, calc(100dvh - 112px));
+    height: auto !important;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__properties {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__mobile-tools,
+  body.sanro-dm-fullscreen .sanro-dm__mobile-print {
+    display: none !important;
+  }
+}
+
 @media (max-width: 760px) {
   body.sanro-dm-fullscreen {
     width: 100%;

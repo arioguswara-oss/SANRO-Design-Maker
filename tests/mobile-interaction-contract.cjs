@@ -36,7 +36,17 @@ assert.match(mobileCss, /\.sanro-dm__mobile-print\s*\{[\s\S]*position: relative 
 assert.match(mobileCss, /\.sanro-dm__mobile-tools\s*\{[\s\S]*position: relative !important/);
 assert.match(mobileCss, /safe-area-inset-bottom/);
 assert.match(mobileCss, /\.sanro-dm__stage\s*\{[\s\S]*100dvh - 190px/);
-assert.match(plugin, /Version: 0\.2\.3-dev/);
+assert.match(plugin, /Version: 0\.2\.4-dev/);
+assert.match(css, /class="sanro-dm__home" data-home-link href="<\?php echo esc_url\(home_url\('\/'\)\); \?>"/);
+assert.match(css, /sanro-dm__home[\s\S]*<svg/);
+assert.match(editor, /json !== lastPersistedDraft/);
+assert.match(editor, /Perubahan belum tersimpan/);
+assert.match(editor, /writeDraft\(\{ version: 1, updatedAt: Date\.now\(\), json \}\)/);
+assert.match(editor, /window\.location\.assign\(target\)/);
+assert.match(mobileCss, /\.sanro-dm__home\s*\{[\s\S]*width: 44px/);
+assert.match(mobileCss, /\.wp-block-post-title,[\s\S]*\.entry-title\s*\{\s*display: none !important/);
+assert.match(mobileCss, /grid-template-columns: minmax\(84px, 96px\) minmax\(0, 1fr\) minmax\(280px, 320px\)/);
+assert.match(mobileCss, /width: min\(100%, 1000px, calc\(100dvh - 112px\)\)/);
 
 // Layout budget contract: header 56px, CTA 48px including margin, toolbar 60px,
 // 190px stage reserve and safe-area are all accounted for at target phone widths.
@@ -46,6 +56,18 @@ for (const [viewport, height, safe] of [[360, 640, 0], [390, 780, 24], [412, 844
   assert.ok(stageWidth <= viewport - 16, `canvas fits ${viewport}px viewport`);
   assert.ok(stageWidth <= workspaceHeight, `canvas fits remaining ${viewport}px workspace`);
   assert.ok(56 + workspaceHeight + 48 + 60 <= height - safe, `header, canvas and controls fit ${viewport}px viewport`);
+}
+
+// Desktop grid contract: left rail + bounded right properties panel + flexible canvas column.
+for (const [viewport, height] of [[1280, 800], [1366, 768], [1440, 900], [1920, 1080]]) {
+  const left = Math.min(96, Math.max(84, viewport * 0.075));
+  const right = Math.min(320, Math.max(280, viewport * 0.25));
+  const center = viewport - left - right;
+  const padding = Math.min(32, Math.max(12, viewport * 0.02));
+  const stage = Math.min(center - padding * 2, 1000, height - 112);
+  assert.ok(center > 0 && stage > 0, `three-column desktop workspace fits ${viewport}px`);
+  assert.equal(left + center + right, viewport, `desktop columns span ${viewport}px viewport`);
+  assert.ok(stage <= center - padding * 2 && stage <= height - 112, `canvas fits desktop work area at ${viewport}px`);
 }
 
 const fabric = require(path.join(root, 'sanro-design-maker/assets/vendor/fabric/index.min.js'));

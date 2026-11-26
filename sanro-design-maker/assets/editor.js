@@ -14,6 +14,7 @@
     const element = root.querySelector('[data-design-canvas]');
     const stage = root.querySelector('[data-stage]');
     const status = root.querySelector('[data-save-status]');
+    const homeLink = root.querySelector('[data-home-link]');
     const notice = root.querySelector('[data-notice]');
     const fileInput = root.querySelector('[data-image-file]');
     const layers = root.querySelector('[data-layer-list]');
@@ -38,12 +39,10 @@
     let fitScale = 1, userZoom = 1, canvasMeasured = false;
     function updateTouchControlSizes() {
       const zoom = Math.max(.01, canvas.getZoom() || 1);
-      canvas.getObjects().forEach(object => {
-        object.set({ cornerSize: Math.ceil(18 / zoom), touchCornerSize: Math.ceil(52 / zoom) });
-        object.setCoords();
-      });
+      canvas.getObjects().forEach(object => window.SANRODMConfigureObjectControls(object, zoom));
     }
     let history = [], historyIndex = -1, historyTimer = 0, saveTimer = 0, noticeTimer = 0, restoring = false;
+    let lastPersistedDraft = null, draftWriteRevision = 0;
     let dbPromise;
 
     function inform(message) {
@@ -89,9 +88,10 @@
       historyIndex = history.length - 1;
       status.textContent = 'Menyimpan draft…';
       window.clearTimeout(saveTimer);
+      const revision = ++draftWriteRevision;
       saveTimer = window.setTimeout(() => {
         writeDraft({ version: 1, updatedAt: Date.now(), json })
-          .then(() => { status.textContent = 'Draft lokal tersimpan'; })
+          .then(() => { if (revision === draftWriteRevision) lastPersistedDraft = json; status.textContent = 'Draft lokal tersimpan'; })
           .catch(() => { status.textContent = 'Draft hanya ada di sesi ini'; });
       }, 250);
     }
@@ -376,6 +376,27 @@
       else if (action === 'save') saveDesign();
       else if (action === 'my-designs') listDesigns();
     });
+    if (homeLink && !sharedView) {
+      homeLink.addEventListener('click', event => {
+        event.preventDefault();
+        const target = homeLink.href;
+        const json = JSON.stringify(canvas.toJSON(['name', 'data']));
+        const isUnsaved = json !== lastPersistedDraft;
+        if (isUnsaved && !window.confirm('Perubahan belum tersimpan. Simpan draft lokal lalu kembali ke halaman utama?')) return;
+        window.clearTimeout(saveTimer);
+        window.clearTimeout(historyTimer);
+        if (json.length > LIMIT) {
+          status.textContent = 'Draft terlalu besar untuk disimpan lokal';
+          if (window.confirm('Draft melebihi batas penyimpanan lokal. Tetap kembali ke halaman utama tanpa menyimpan draft?')) window.location.assign(target);
+          return;
+        }
+        status.textContent = 'Menyimpan draft…';
+        const revision = ++draftWriteRevision;
+        writeDraft({ version: 1, updatedAt: Date.now(), json })
+          .then(() => { if (revision === draftWriteRevision) lastPersistedDraft = json; status.textContent = 'Draft lokal tersimpan'; window.location.assign(target); })
+          .catch(() => { status.textContent = 'Draft hanya ada di sesi ini'; inform('Draft gagal disimpan. Tetap di editor agar desain tidak hilang.'); });
+      });
+    }
     root.querySelectorAll('[data-prop]').forEach(input => {
       input.addEventListener('input', () => updateProperty(input.dataset.prop, input.value));
     });
@@ -383,12 +404,7 @@
     assetQuery.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchAssets();}});
     fileInput.addEventListener('change', () => { upload(fileInput.files[0]); fileInput.value = ''; });
     function enableTouchControls(object) {
-      const zoom = Math.max(.01, canvas.getZoom() || 1);
-      object.set({ cornerSize: Math.ceil(18 / zoom), touchCornerSize: Math.ceil(52 / zoom), transparentCorners: false, padding: 10,
-        hasControls: true, hasBorders: true, lockMovementX: false, lockMovementY: false,
-        lockScalingX: false, lockScalingY: false, lockRotation: false, lockScalingFlip: false,
-        uniformScaling: object.type === 'image' || object.type === 'i-text' || object.type === 'textbox' });
-      object.setCoords();
+      window.SANRODMConfigureObjectControls(object, Math.max(.01, canvas.getZoom() || 1));
     }
     canvas.on('object:added', event => { enableTouchControls(event.target); renderLayers(); window.clearTimeout(historyTimer); historyTimer = window.setTimeout(snapshot, 120); });
     canvas.on('object:modified', () => { renderLayers(); snapshot(); });
@@ -438,6 +454,7 @@
       fetch(window.SANRO_DM_API.root+'shares/'+encodeURIComponent(shareToken),{credentials:'same-origin'}).then(response=>{if(!response.ok)throw new Error('Tautan sudah kedaluwarsa atau dicabut.');return response.json();}).then(async payload=>{const json=await hydrateImages(payload.design,shareToken);restoring=true;await canvas.loadFromJSON(json);canvas.getObjects().forEach(object=>object.set({selectable:false,evented:false}));canvas.selection=false;canvas.requestRenderAll();renderLayers();restoring=false;inform('Tampilan desain bersama (read-only).');}).catch(error=>inform(error.message));
     } else readDraft().then(draft => {
       if (!draft || !draft.json || draft.version !== 1) { snapshot(); return; }
+      lastPersistedDraft = draft.json;
       if (window.confirm('Lanjutkan draft SANRO Design Maker yang tersimpan di perangkat ini?')) loadJSON(draft.json);
       else snapshot();
     }).catch(() => snapshot());
