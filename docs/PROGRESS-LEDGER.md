@@ -17,6 +17,7 @@ Implemented on `develop`: responsive editor shell; local Fabric.js 7.4.0 MIT bun
 Evidence:
 - PHP lint for plugin entrypoint, bootstrap, storage module and smoke harness: PASS.
 - `php tests/php-smoke.php` — PASS for shortcode, local asset wiring, canvas/templates/shapes and print CTA.
+- `php tests/storage-contract.php` — PASS for accepting owned private asset refs and rejecting inline data, remote URLs, unowned asset IDs and >250 objects.
 - `node --check` for editor JS and browser smoke script — PASS.
 - Browser UI — NOT TESTED: no browser desktop/runner tool is exposed in this session; local Playwright package is missing. The previously failing local Chromium method was not retried.
 - WordPress runtime API, account ownership, upload MIME/dimension/quota checks, private path resolution, lifecycle GC and guest-to-account recovery — NOT TESTED.
