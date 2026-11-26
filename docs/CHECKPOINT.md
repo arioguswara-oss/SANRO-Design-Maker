@@ -1,7 +1,7 @@
 # SANRO Design Maker V1 checkpoint
 
 - Integration branch: `develop`.
-- Last source SHA: to be filled after the current GitHub MCP code commit.
+- Last source SHA: `88491d4f2a4d90e88c3f14bc8e1ff12335a0c386` (implementation source commit on `develop`).
 - Verified progress: 0.5% overall (unchanged). New feature code has focused unit evidence but no real WordPress/browser runtime evidence.
 - Workspace: isolated source copy at `/home/sanro/projects/sanro-design-maker-exec`, not a Git checkout. Changes are published to `develop` through GitHub MCP with an expected-head check.
 
@@ -33,7 +33,7 @@
 - Implement/test PNG raster production output when a supported server raster engine is available; current server master is SVG only.
 - Studio source requires product ID, `front`/`back` geometry and a Studio-authorized private master reference. The Maker's single canvas/SVG master has no proven mapping; do not send guessed requests or change SANRO Studio.
 - Only Anton is bundled. More Google Font binaries can be added from their official repository with licenses.
-- Build an installable ZIP labeled TESTING after source commit, run ZIP/security minimum checks, upload privately to SANRO Design Maker/Releases and add checksum/release notes.
+- Build an installable ZIP labeled TESTING from `88491d4f2a4d90e88c3f14bc8e1ff12335a0c386`, run ZIP/security minimum checks, upload privately to SANRO Design Maker/Releases and add checksum/release notes.
 - Continue remaining independent V1 work; no installer or feature is FINAL RELEASE.
 
 ## Authorization
