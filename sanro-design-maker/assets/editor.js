@@ -19,6 +19,7 @@
     const layers = root.querySelector('[data-layer-list]');
     const templatePanel = root.querySelector('[data-template-panel]');
     const templateList = root.querySelector('[data-template-list]');
+    const shapePanel = root.querySelector('[data-shape-panel]');
     const canvas = new fabric.Canvas(element, {
       width: 1000, height: 1000, backgroundColor: 'rgba(0,0,0,0)',
       preserveObjectStacking: true, selection: true, stopContextMenu: true,
@@ -123,8 +124,12 @@
       const object = new fabric.IText('Tulis teks', { left: 210, top: 220, fontSize: 72, fontFamily: 'Arial', fill: '#20242a', name: 'Teks baru' });
       canvas.add(object); canvas.setActiveObject(object); object.enterEditing(); object.selectAll(); canvas.requestRenderAll(); renderLayers(); snapshot();
     }
-    function addShape() {
-      const object = new fabric.Rect({ left: 340, top: 340, width: 260, height: 190, rx: 18, ry: 18, fill: '#e65a33', strokeWidth: 0, name: 'Bentuk' });
+    function addShape(kind) {
+      let object;
+      if (kind === 'circle') object = new fabric.Circle({ left: 340, top: 340, radius: 145, fill: '#e65a33', strokeWidth: 0, name: 'Lingkaran' });
+      else if (kind === 'triangle') object = new fabric.Triangle({ left: 340, top: 330, width: 300, height: 300, fill: '#e65a33', strokeWidth: 0, name: 'Segitiga' });
+      else if (kind === 'line') object = new fabric.Line([220, 500, 780, 500], { stroke: '#20242a', strokeWidth: 16, fill: '#20242a', name: 'Garis' });
+      else object = new fabric.Rect({ left: 340, top: 340, width: 260, height: 190, rx: 18, ry: 18, fill: '#e65a33', strokeWidth: 0, name: 'Persegi' });
       canvas.add(object); canvas.setActiveObject(object); canvas.requestRenderAll(); renderLayers(); snapshot();
     }
     function templateText(text, top, size, fill, options) {
@@ -210,6 +215,8 @@
     }
     function showProperties() { root.classList.toggle('is-properties-open'); }
     root.addEventListener('click', event => {
+      const shape = event.target.closest('[data-shape-type]');
+      if (shape && shapePanel.contains(shape)) { addShape(shape.dataset.shapeType); shapePanel.hidden=true; return; }
       const template = event.target.closest('[data-template-id]');
       if (template && templateList.contains(template)) { addTemplate(template.dataset.templateId); return; }
       const button = event.target.closest('[data-action]'); if (!button) return;
@@ -217,12 +224,12 @@
       if (action === 'undo') undo();
       else if (action === 'redo') redo();
       else if (action === 'add-text') addText();
-      else if (action === 'add-shape') addShape();
+      else if (action === 'add-shape') { shapePanel.hidden=!shapePanel.hidden; templatePanel.hidden=true; }
       else if (action === 'upload') fileInput.click();
       else if (action === 'duplicate') duplicate();
       else if (action === 'delete') remove();
       else if (action === 'layers') showProperties();
-      else if (action === 'templates') templatePanel.hidden = !templatePanel.hidden;
+      else if (action === 'templates') { templatePanel.hidden = !templatePanel.hidden; shapePanel.hidden=true; }
       else if (action === 'templates-close') templatePanel.hidden = true;
       else if (action === 'align-left') align('left');
       else if (action === 'align-center') align('center');
