@@ -421,8 +421,9 @@
       const height = Math.max(1, Math.round(stage.clientHeight));
       if (!width || !height) return;
       const oldZoom = canvas.getZoom();
+      const previousFitScale = fitScale;
       fitScale = Math.min(width / 1000, height / 1000);
-      if (canvasMeasured && oldZoom > 0) userZoom = Math.min(4, Math.max(.55, oldZoom / (fitScale || 1)));
+      if (canvasMeasured && oldZoom > 0) userZoom = Math.min(4, Math.max(.55, oldZoom / (previousFitScale || 1)));
       canvas.setDimensions({ width, height });
       const zoom = fitScale * userZoom;
       canvas.setViewportTransform([zoom, 0, 0, zoom, (width - 1000 * zoom) / 2, (height - 1000 * zoom) / 2]);

@@ -8,6 +8,8 @@ const plugin = fs.readFileSync(path.join(root, 'sanro-design-maker/sanro-design-
 
 assert.match(editor, /new ResizeObserver\(resizeCanvas\)/);
 assert.match(editor, /canvas\.setDimensions\(\{ width, height \}\)/);
+assert.match(editor, /const previousFitScale = fitScale/);
+assert.match(editor, /oldZoom \/ \(previousFitScale \|\| 1\)/);
 assert.match(editor, /canvas\.setViewportTransform\(\[zoom, 0, 0, zoom, \(width - 1000 \* zoom\) \/ 2, \(height - 1000 \* zoom\) \/ 2\]\)/);
 assert.match(editor, /canvas\.upperCanvasEl\.getBoundingClientRect\(\)/);
 assert.match(editor, /touchCornerSize: Math\.ceil\(52 \/ zoom\)/);
