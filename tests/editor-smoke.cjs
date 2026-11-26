@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { chromium } = require('/home/sanro/sanro-browser-qa/node_modules/playwright');
+const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '../sanro-design-maker');
 const markup = ['<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1><link rel="stylesheet" href="/assets/editor.css">',
 '<main class="sanro-dm" data-sanro-dm><header class="sanro-dm__header"><a class="sanro-dm__brand">SANRO <span>DESIGN MAKER</span></a><div class="sanro-dm__header-actions"><button data-action="undo">↶</button><button data-action="redo">↷</button><span data-save-status></span><a class="sanro-dm__print" href="/custom/">CETAK DESAIN INI</a></div></header>',
