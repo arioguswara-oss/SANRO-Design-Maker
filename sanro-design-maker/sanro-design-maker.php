@@ -2,12 +2,12 @@
 /**
  * Plugin Name: SANRO Design Maker
  * Description: Guest-first graphic design editor for kaoscetak.id.
- * Version: 0.2.1-dev
+ * Version: 0.2.2-dev
  * Requires PHP: 7.4
  * Text Domain: sanro-design-maker
  */
 defined('ABSPATH') || exit;
-define('SANRO_DM_VERSION', '0.2.1-dev');
+define('SANRO_DM_VERSION', '0.2.2-dev');
 define('SANRO_DM_FILE', __FILE__);
 define('SANRO_DM_URL', plugin_dir_url(__FILE__));
 require_once __DIR__ . '/includes/bootstrap.php';

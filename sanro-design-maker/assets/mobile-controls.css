@@ -1,0 +1,44 @@
+@media (max-width: 760px) {
+  body.sanro-dm-fullscreen .sanro-dm {
+    width: auto !important;
+    max-width: 100%;
+    overflow-x: clip !important;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__mobile-tools {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    justify-content: stretch;
+    gap: 2px;
+    padding-left: max(4px, env(safe-area-inset-left));
+    padding-right: max(4px, env(safe-area-inset-right));
+    overflow: hidden;
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__mobile-tools button {
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(9px, 2.9vw, 11px);
+  }
+
+  body.sanro-dm-fullscreen .sanro-dm__mobile-print {
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    width: auto;
+    max-width: calc(100vw - 16px);
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: clamp(12px, 3.7vw, 15px);
+  }
+}

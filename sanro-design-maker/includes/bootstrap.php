@@ -16,9 +16,11 @@ function sanro_dm_register_assets() {
         wp_register_style('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.css', array(), SANRO_DM_VERSION);
         wp_register_style('sanro-dm-templates', SANRO_DM_URL . 'assets/templates.css', array('sanro-dm-editor'), SANRO_DM_VERSION);
         wp_register_style('sanro-dm-shapes', SANRO_DM_URL . 'assets/shapes.css', array('sanro-dm-templates'), SANRO_DM_VERSION);
+        wp_register_style('sanro-dm-mobile', SANRO_DM_URL . 'assets/mobile-controls.css', array('sanro-dm-shapes'), SANRO_DM_VERSION);
         wp_register_script('sanro-dm-fabric', SANRO_DM_URL . 'assets/vendor/fabric/index.min.js', array(), '7.4.0', true);
         wp_register_script('sanro-dm-remove-bg', SANRO_DM_URL . 'assets/remove-background.js', array(), SANRO_DM_VERSION, true);
-        wp_register_script('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.js', array('sanro-dm-fabric','sanro-dm-remove-bg'), SANRO_DM_VERSION, true);
+        wp_register_script('sanro-dm-controls', SANRO_DM_URL . 'assets/object-controls.js', array('sanro-dm-fabric'), SANRO_DM_VERSION, true);
+        wp_register_script('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.js', array('sanro-dm-fabric','sanro-dm-remove-bg','sanro-dm-controls'), SANRO_DM_VERSION, true);
         wp_localize_script('sanro-dm-editor', 'SANRO_DM_API', array(
             'root' => esc_url_raw(rest_url('sanro-design-maker/v1/')),
             'nonce' => is_user_logged_in() ? wp_create_nonce('wp_rest') : '',
@@ -41,6 +43,7 @@ function sanro_dm_enqueue_editor_assets() {
     wp_enqueue_style('sanro-dm-editor');
     wp_enqueue_style('sanro-dm-templates');
     wp_enqueue_style('sanro-dm-shapes');
+    wp_enqueue_style('sanro-dm-mobile');
     wp_enqueue_script('sanro-dm-editor');
 }
 function sanro_dm_referrer_policy() { $page=get_post();if($page&&has_shortcode($page->post_content,'sanro_design_maker'))echo '<meta name="referrer" content="no-referrer">'; }
@@ -54,6 +57,7 @@ function sanro_dm_render_editor() {
     wp_enqueue_style('sanro-dm-editor');
     wp_enqueue_style('sanro-dm-templates');
     wp_enqueue_style('sanro-dm-shapes');
+    wp_enqueue_style('sanro-dm-mobile');
     wp_enqueue_script('sanro-dm-editor');
     ob_start();
     ?>
@@ -117,8 +121,8 @@ function sanro_dm_render_editor() {
         </aside>
       </div>
       <footer class="sanro-dm__mobile-tools" aria-label="Design tools">
-        <button type="button" data-action="add-text">Text</button><button type="button" data-action="upload">Image</button>
-        <button type="button" data-action="add-shape">Shapes</button><button type="button" data-action="templates">Templates</button><button type="button" data-action="assets">Assets</button><button type="button" data-action="layers">Layers</button>
+        <button type="button" data-action="add-text" aria-label="Add text">Text</button><button type="button" data-action="upload" aria-label="Upload image">Image</button>
+        <button type="button" data-action="add-shape" aria-label="Add shape">Shape</button><button type="button" data-action="templates" aria-label="Templates">Tpl</button><button type="button" data-action="assets" aria-label="Assets">Asset</button><button type="button" data-action="layers" aria-label="Layers">Layer</button>
       </footer>
       <a class="sanro-dm__mobile-print" href="<?php echo esc_url(home_url('/custom/')); ?>">CETAK DESAIN INI</a>
       <div class="sanro-dm__notice" data-notice role="status" aria-live="polite"></div>
