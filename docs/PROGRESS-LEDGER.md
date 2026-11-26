@@ -24,5 +24,6 @@ Evidence:
 - `node tests/remove-background.test.cjs` — PASS (3 focused pixel tests).
 - Browser, live Openverse and WordPress route/admin/storage integration — NOT TESTED. Known unavailable runners/runtime were not retried.
 - Staging, production and SANRO Studio unchanged.
+- TESTING installer uploaded privately to SANRO Design Maker/Releases. ZIP: 211,528 bytes, local SHA256 `1f9cee487fbcadb69c09f667bdcafea3e3e9cd04d9114688c522467362506963`; [Drive installer](https://drive.google.com/file/d/1ZkTPT8X0mP3bnpQMgPVpeQQBVB3edsuc/view?usp=drivesdk), [checksum manifest](https://drive.google.com/file/d/1sVk55SN_heWEpS0WN5pgHM0cpDM4Iyog/view?usp=drivesdk). Drive confirms `shared=false`, expected parent and size. Remote SHA256 metadata unavailable — NOT VERIFIED.
 
 Known gaps: no WordPress/browser runtime evidence; no raster PNG/Imagick/GD renderer; Studio private master mapping and two-sided geometry remain unverified; other Google Font files are not bundled; background removal is flat-color only; final acceptance NOT TESTED. Installer will be labeled TESTING and is not production-ready.
