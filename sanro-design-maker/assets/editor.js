@@ -32,8 +32,17 @@
     const canvas = new fabric.Canvas(element, {
       width: 1000, height: 1000, backgroundColor: 'rgba(0,0,0,0)',
       preserveObjectStacking: true, selection: true, stopContextMenu: true,
-      fireRightClick: false, enableRetinaScaling: true
+      fireRightClick: false, enableRetinaScaling: true, targetFindTolerance: 18,
+      perPixelTargetFind: false, uniformScaling: true, allowTouchScrolling: false
     });
+    let fitScale = 1, userZoom = 1, canvasMeasured = false;
+    function updateTouchControlSizes() {
+      const zoom = Math.max(.01, canvas.getZoom() || 1);
+      canvas.getObjects().forEach(object => {
+        object.set({ cornerSize: Math.ceil(18 / zoom), touchCornerSize: Math.ceil(52 / zoom) });
+        object.setCoords();
+      });
+    }
     let history = [], historyIndex = -1, historyTimer = 0, saveTimer = 0, noticeTimer = 0, restoring = false;
     let dbPromise;
 
@@ -373,7 +382,15 @@
     const fontSelect=root.querySelector('[data-font-family]');fontSelect.addEventListener('change',()=>{const object=selected();if(!object||!object.set||!('fontFamily'in object))return inform('Pilih objek teks terlebih dahulu.');object.set('fontFamily',fontSelect.value);document.fonts.load('16px "'+fontSelect.value+'"').finally(()=>{canvas.requestRenderAll();snapshot();});});
     assetQuery.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchAssets();}});
     fileInput.addEventListener('change', () => { upload(fileInput.files[0]); fileInput.value = ''; });
-    canvas.on('object:added', () => { renderLayers(); window.clearTimeout(historyTimer); historyTimer = window.setTimeout(snapshot, 120); });
+    function enableTouchControls(object) {
+      const zoom = Math.max(.01, canvas.getZoom() || 1);
+      object.set({ cornerSize: Math.ceil(18 / zoom), touchCornerSize: Math.ceil(52 / zoom), transparentCorners: false, padding: 10,
+        hasControls: true, hasBorders: true, lockMovementX: false, lockMovementY: false,
+        lockScalingX: false, lockScalingY: false, lockRotation: false, lockScalingFlip: false,
+        uniformScaling: object.type === 'image' || object.type === 'i-text' || object.type === 'textbox' });
+      object.setCoords();
+    }
+    canvas.on('object:added', event => { enableTouchControls(event.target); renderLayers(); window.clearTimeout(historyTimer); historyTimer = window.setTimeout(snapshot, 120); });
     canvas.on('object:modified', () => { renderLayers(); snapshot(); });
     canvas.on('object:removed', () => { renderLayers(); snapshot(); });
     canvas.on('selection:created', renderLayers); canvas.on('selection:updated', renderLayers); canvas.on('selection:cleared', renderLayers);
@@ -383,22 +400,38 @@
       if ((event.key === 'Delete' || event.key === 'Backspace') && !event.target.closest('input,textarea,[contenteditable=true]')) remove();
     });
     let touches = new Map(), lastDistance = 0;
-    stage.addEventListener('touchstart', event => { for (const touch of event.changedTouches) touches.set(touch.identifier, touch); if (touches.size === 2) lastDistance = distance([...touches.values()]); }, { passive: true });
+    stage.addEventListener('touchstart', event => { for (const touch of event.changedTouches) touches.set(touch.identifier, touch); if (touches.size === 2) { lastDistance = distance([...touches.values()]); event.preventDefault(); event.stopImmediatePropagation(); } }, { capture: true, passive: false });
     stage.addEventListener('touchmove', event => {
       for (const touch of event.changedTouches) if (touches.has(touch.identifier)) touches.set(touch.identifier, touch);
       if (touches.size >= 2) {
-        event.preventDefault(); const points = [...touches.values()]; const next = distance(points);
+        event.preventDefault(); event.stopImmediatePropagation(); const points = [...touches.values()]; const next = distance(points);
         if (lastDistance > 0 && next > 0) {
-          const rect = stage.getBoundingClientRect();
+          const rect = canvas.upperCanvasEl.getBoundingClientRect();
           const center = new fabric.Point((((points[0].clientX + points[1].clientX) / 2) - rect.left) * canvas.getWidth() / rect.width, (((points[0].clientY + points[1].clientY) / 2) - rect.top) * canvas.getHeight() / rect.height);
-          const factor = Math.min(1.12, Math.max(.88, next / lastDistance)); canvas.zoomToPoint(center, Math.min(4, Math.max(.3, canvas.getZoom() * factor)));
+          const factor = Math.min(1.12, Math.max(.88, next / lastDistance)); userZoom = Math.min(4, Math.max(.55, userZoom * factor));
+          canvas.zoomToPoint(center, fitScale * userZoom); updateTouchControlSizes();
         }
         lastDistance = next;
       }
     }, { passive: false });
-    stage.addEventListener('touchend', event => { for (const touch of event.changedTouches) touches.delete(touch.identifier); if (touches.size < 2) lastDistance = 0; }, { passive: true });
+    stage.addEventListener('touchend', event => { if (touches.size >= 2) event.stopImmediatePropagation(); for (const touch of event.changedTouches) touches.delete(touch.identifier); if (touches.size < 2) lastDistance = 0; }, { capture: true, passive: true });
     function distance(points) { return Math.hypot(points[0].clientX - points[1].clientX, points[0].clientY - points[1].clientY); }
-    canvas.setDimensions({ width: 1000, height: 1000 });
+    function resizeCanvas() {
+      const width = Math.max(1, Math.round(stage.clientWidth));
+      const height = Math.max(1, Math.round(stage.clientHeight));
+      if (!width || !height) return;
+      const oldZoom = canvas.getZoom();
+      fitScale = Math.min(width / 1000, height / 1000);
+      if (canvasMeasured && oldZoom > 0) userZoom = Math.min(4, Math.max(.55, oldZoom / (fitScale || 1)));
+      canvas.setDimensions({ width, height });
+      const zoom = fitScale * userZoom;
+      canvas.setViewportTransform([zoom, 0, 0, zoom, (width - 1000 * zoom) / 2, (height - 1000 * zoom) / 2]);
+      updateTouchControlSizes();
+      canvas.calcOffset(); canvas.requestRenderAll(); canvasMeasured = true;
+    }
+    if ('ResizeObserver' in window) { const observer = new ResizeObserver(resizeCanvas); observer.observe(stage); }
+    else window.addEventListener('resize', resizeCanvas, { passive: true });
+    resizeCanvas();
     if(sharedView){
       root.classList.add('is-shared-view');
       fetch(window.SANRO_DM_API.root+'shares/'+encodeURIComponent(shareToken),{credentials:'same-origin'}).then(response=>{if(!response.ok)throw new Error('Tautan sudah kedaluwarsa atau dicabut.');return response.json();}).then(async payload=>{const json=await hydrateImages(payload.design,shareToken);restoring=true;await canvas.loadFromJSON(json);canvas.getObjects().forEach(object=>object.set({selectable:false,evented:false}));canvas.selection=false;canvas.requestRenderAll();renderLayers();restoring=false;inform('Tampilan desain bersama (read-only).');}).catch(error=>inform(error.message));

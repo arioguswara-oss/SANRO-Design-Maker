@@ -4,6 +4,13 @@ function sanro_dm_register_editor() {
     add_shortcode('sanro_design_maker', 'sanro_dm_render_editor');
 }
 
+function sanro_dm_editor_body_class($classes) {
+    $page = get_post();
+    if ($page && has_shortcode($page->post_content, 'sanro_design_maker')) { $classes[] = 'sanro-dm-fullscreen'; }
+    return $classes;
+}
+add_filter('body_class', 'sanro_dm_editor_body_class');
+
 function sanro_dm_register_assets() {
     if (!wp_style_is('sanro-dm-editor', 'registered')) {
         wp_register_style('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.css', array(), SANRO_DM_VERSION);
@@ -22,6 +29,7 @@ function sanro_dm_register_assets() {
         ));
         $fontCss='@font-face{font-family:"Anton";src:url("'.esc_url(SANRO_DM_URL.'assets/fonts/Anton-Regular.ttf').'") format("truetype");font-style:normal;font-weight:400;font-display:swap;}';foreach((array)get_option('sanro_dm_fonts',array()) as $font){if(empty($font['family'])||empty($font['file'])||!in_array($font['family'],sanro_dm_font_families(),true)||basename($font['file'])!==$font['file']||pathinfo($font['file'],PATHINFO_EXTENSION)!=='woff2')continue;$uploads=wp_upload_dir();$url=trailingslashit($uploads['baseurl']).'sanro-design-maker-fonts/'.rawurlencode($font['file']);$fontCss.='@font-face{font-family:"'.esc_attr($font['family']).'";src:url("'.esc_url($url).'") format("woff2");font-style:normal;font-weight:100 900;font-display:swap;}';}
         if($fontCss)wp_add_inline_style('sanro-dm-editor',$fontCss);
+        wp_add_inline_style('sanro-dm-shapes', sanro_dm_fullscreen_css());
     }
 }
 
@@ -36,6 +44,10 @@ function sanro_dm_enqueue_editor_assets() {
     wp_enqueue_script('sanro-dm-editor');
 }
 function sanro_dm_referrer_policy() { $page=get_post();if($page&&has_shortcode($page->post_content,'sanro_design_maker'))echo '<meta name="referrer" content="no-referrer">'; }
+
+function sanro_dm_fullscreen_css() {
+    return 'body.sanro-dm-fullscreen{margin:0!important;overflow:hidden!important}body.sanro-dm-fullscreen header.site-header,body.sanro-dm-fullscreen footer.site-footer,body.sanro-dm-fullscreen #masthead,body.sanro-dm-fullscreen #colophon,body.sanro-dm-fullscreen .wp-site-blocks>header,body.sanro-dm-fullscreen .wp-site-blocks>footer{display:none!important}body.sanro-dm-fullscreen .wp-site-blocks,body.sanro-dm-fullscreen main.wp-block-group,body.sanro-dm-fullscreen #page,body.sanro-dm-fullscreen #content,body.sanro-dm-fullscreen .site-content{margin:0!important;padding:0!important;max-width:none!important;width:100%!important}body.sanro-dm-fullscreen .sanro-dm{position:fixed!important;inset:0!important;z-index:99999!important;width:100vw!important;height:100vh!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}body.sanro-dm-fullscreen .sanro-dm__workspace{height:calc(100dvh - 64px);min-height:0}body.sanro-dm-fullscreen .sanro-dm__stage{flex:0 1 min(100%,680px);min-height:0}body.sanro-dm-fullscreen .sanro-dm__stage .canvas-container{position:relative!important;width:100%!important;height:100%!important;overflow:hidden}body.sanro-dm-fullscreen .sanro-dm__stage canvas{touch-action:none;user-select:none;-webkit-user-select:none}@media(max-width:760px){body.sanro-dm-fullscreen .sanro-dm__header{height:56px;min-height:56px;padding:5px 8px;gap:6px}body.sanro-dm-fullscreen .sanro-dm__brand{font-size:13px;white-space:nowrap}body.sanro-dm-fullscreen .sanro-dm__brand span{display:none}body.sanro-dm-fullscreen .sanro-dm__header-actions{min-width:0;gap:4px}body.sanro-dm-fullscreen .sanro-dm__header-actions button{min-width:44px;height:44px;padding:0 7px;font-size:16px}body.sanro-dm-fullscreen .sanro-dm__saved,body.sanro-dm-fullscreen .sanro-dm__print{display:none!important}body.sanro-dm-fullscreen .sanro-dm__header-actions [data-action=download-preview]{width:56px;min-width:56px;font-size:12px}body.sanro-dm-fullscreen .sanro-dm__workspace{height:calc(100dvh - 56px);min-height:0;padding-bottom:calc(112px + env(safe-area-inset-bottom))}body.sanro-dm-fullscreen .sanro-dm__stage-wrap{height:100%;padding:4px 8px;justify-content:center}body.sanro-dm-fullscreen .sanro-dm__stage{width:min(calc(100vw - 16px),calc(100dvh - 190px));height:auto;max-width:100%;aspect-ratio:1;flex:none}body.sanro-dm-fullscreen .sanro-dm__hint{display:none}body.sanro-dm-fullscreen .sanro-dm__mobile-tools{bottom:0;padding-bottom:calc(5px + env(safe-area-inset-bottom))}body.sanro-dm-fullscreen .sanro-dm__mobile-tools button{min-width:44px;min-height:48px;font-size:12px}body.sanro-dm-fullscreen .sanro-dm__mobile-print{left:8px;right:8px;bottom:calc(59px + env(safe-area-inset-bottom));min-height:44px;padding:0 8px;font-size:14px;white-space:nowrap}body.sanro-dm-fullscreen .sanro-dm__notice{bottom:calc(120px + env(safe-area-inset-bottom));max-width:calc(100vw - 24px)}body.sanro-dm-fullscreen .sanro-dm__properties{padding-bottom:calc(78px + env(safe-area-inset-bottom))}body.sanro-dm-fullscreen .sanro-dm__asset-panel{position:fixed;top:62px;left:8px;max-height:calc(100dvh - 180px)}body.sanro-dm-fullscreen .sanro-dm__shape-panel,body.sanro-dm-fullscreen .sanro-dm__template-panel{position:fixed;top:62px;left:8px;right:8px;max-height:calc(100dvh - 180px);overflow:auto}}';
+}
 
 function sanro_dm_render_editor() {
     sanro_dm_register_assets();

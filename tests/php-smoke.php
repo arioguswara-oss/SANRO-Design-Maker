@@ -2,6 +2,7 @@
 define('ABSPATH', __DIR__);
 $GLOBALS['hooks'] = array(); $GLOBALS['shortcodes'] = array();
 function add_action($name, $callback) { $GLOBALS['hooks'][$name][] = $callback; }
+function add_filter($name, $callback) { $GLOBALS['filters'][$name][] = $callback; }
 function add_shortcode($name, $callback) { $GLOBALS['shortcodes'][$name] = $callback; }
 function plugin_dir_url($file) { return 'https://example.test/plugins/sanro-design-maker/'; }
 function wp_style_is($handle, $list) { return false; }
