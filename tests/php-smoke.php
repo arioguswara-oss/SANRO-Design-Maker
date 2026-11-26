@@ -9,6 +9,12 @@ function wp_register_style(...$args) { $GLOBALS['styles'][] = $args; }
 function wp_register_script(...$args) { $GLOBALS['scripts'][] = $args; }
 function wp_enqueue_style($handle) { $GLOBALS['enqueued'][] = $handle; }
 function wp_enqueue_script($handle) { $GLOBALS['enqueued'][] = $handle; }
+function wp_localize_script(...$args) { $GLOBALS['localized'][] = $args; }
+function register_activation_hook(...$args) {} function register_deactivation_hook(...$args) {}
+function rest_url($path = '') { return 'https://example.test/wp-json/' . $path; }
+function esc_url_raw($value) { return $value; } function is_user_logged_in() { return false; }
+function wp_create_nonce($action) { return ''; } function wp_login_url($url) { return 'https://example.test/wp-login.php?redirect_to=' . rawurlencode($url); }
+function wp_unslash($value) { return $value; }
 function is_singular() { return true; }
 function get_post() { return (object) array('post_content' => '[sanro_design_maker]'); }
 function has_shortcode($content, $tag) { return strpos($content, '[' . $tag) !== false; }

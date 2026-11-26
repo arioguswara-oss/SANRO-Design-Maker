@@ -20,6 +20,8 @@
     const templatePanel = root.querySelector('[data-template-panel]');
     const templateList = root.querySelector('[data-template-list]');
     const shapePanel = root.querySelector('[data-shape-panel]');
+    const myDesigns = root.querySelector('[data-my-designs]');
+    let currentDesignId = '';
     const canvas = new fabric.Canvas(element, {
       width: 1000, height: 1000, backgroundColor: 'rgba(0,0,0,0)',
       preserveObjectStacking: true, selection: true, stopContextMenu: true,
@@ -79,9 +81,70 @@
     }
     function restoreJSON(json) {
       restoring = true;
-      return canvas.loadFromJSON(JSON.parse(json)).then(() => {
+      return hydrateImages(JSON.parse(json)).then(value => canvas.loadFromJSON(value)).then(() => {
         canvas.requestRenderAll(); renderLayers();
       }).finally(() => { restoring = false; });
+    }
+    function api(path, options) {
+      if (!window.SANRO_DM_API || !window.SANRO_DM_API.loggedIn) return Promise.reject(new Error('Login diperlukan untuk menyimpan permanen.'));
+      const opts = Object.assign({ credentials: 'same-origin', headers: {} }, options || {});
+      opts.headers = Object.assign({ 'X-WP-Nonce': window.SANRO_DM_API.nonce }, opts.headers);
+      return fetch(window.SANRO_DM_API.root + path, opts).then(response => response.ok ? response : response.json().then(error => { throw new Error(error.message || 'Permintaan gagal.'); }));
+    }
+    async function hydrateImages(json) {
+      for (const object of (json.objects || [])) {
+        if (!object.data || !object.data.assetId) continue;
+        const response = await api('assets/' + encodeURIComponent(object.data.assetId));
+        const blob = await response.blob(); object.src = URL.createObjectURL(blob);
+      }
+      return json;
+    }
+    async function prepareDesign() {
+      const design = canvas.toJSON(['name', 'data']);
+      for (let i = 0; i < canvas.getObjects().length; i++) {
+        const object = canvas.getObjects()[i]; const saved = design.objects[i];
+        if (object.type !== 'image') continue;
+        let assetId = object.data && object.data.assetId;
+        if (!assetId) {
+          const blob = await fetch(object.getSrc()).then(response => response.blob());
+          const form = new FormData(); form.append('file', blob, 'design-image');
+          const uploaded = await api('assets', { method: 'POST', body: form }).then(response => response.json());
+          assetId = uploaded.id; object.data = Object.assign({}, object.data, { assetId });
+        }
+        saved.data = Object.assign({}, saved.data, { assetId }); saved.src = window.SANRO_DM_API.root + 'assets/' + encodeURIComponent(assetId);
+      }
+      return JSON.stringify(design);
+    }
+    async function saveDesign() {
+      if (!window.SANRO_DM_API || !window.SANRO_DM_API.loggedIn) { window.location.href = window.SANRO_DM_API ? window.SANRO_DM_API.loginUrl : '/wp-login.php'; return; }
+      status.textContent = 'Menyimpan desain…';
+      try {
+        const design = await prepareDesign();
+        const response = await api('designs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: currentDesignId || undefined, title: 'Desain SANRO', design }) });
+        const result = await response.json(); currentDesignId = result.id; status.textContent = 'Desain tersimpan'; inform('Desain tersimpan ke akun Anda.');
+        snapshot();
+      } catch (error) { status.textContent = 'Gagal menyimpan'; inform(error.message); }
+    }
+    async function listDesigns(refresh) {
+      if (!window.SANRO_DM_API || !window.SANRO_DM_API.loggedIn) { window.location.href = window.SANRO_DM_API ? window.SANRO_DM_API.loginUrl : '/wp-login.php'; return; }
+      if (!refresh) myDesigns.hidden = !myDesigns.hidden;
+      if (myDesigns.hidden) return;
+      myDesigns.textContent = 'Memuat desain…';
+      try {
+        const items = await api('designs').then(response => response.json()); myDesigns.replaceChildren();
+        if (!items.length) { myDesigns.textContent = 'Belum ada desain tersimpan.'; return; }
+        items.forEach(item => {
+          const row = document.createElement('div'); row.className = 'sanro-dm__design-row';
+          const title = document.createElement('span'); title.textContent = item.title;
+          const open = document.createElement('button'); open.type = 'button'; open.textContent = 'Buka';
+          open.addEventListener('click', async () => { const data = await api('designs/' + encodeURIComponent(item.id)).then(r => r.json()); currentDesignId = data.id; await loadJSON(JSON.stringify(data.design)); inform('Desain dibuka untuk diedit.'); });
+          const duplicateButton = document.createElement('button'); duplicateButton.type = 'button'; duplicateButton.textContent = 'Duplikat';
+          duplicateButton.addEventListener('click', async () => { const data = await api('designs/' + encodeURIComponent(item.id)).then(r => r.json()); await api('designs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({title: item.title + ' salinan', design: JSON.stringify(data.design)}) }); inform('Desain diduplikasi.'); listDesigns(true); });
+          const del = document.createElement('button'); del.type = 'button'; del.textContent = 'Hapus';
+          del.addEventListener('click', async () => { await api('designs/' + encodeURIComponent(item.id), { method: 'DELETE' }); if (currentDesignId === item.id) currentDesignId = ''; inform('Desain dihapus.'); listDesigns(true); });
+          row.append(title, open, duplicateButton, del); myDesigns.append(row);
+        });
+      } catch (error) { myDesigns.textContent = error.message; }
     }
     function loadJSON(json) {
       return restoreJSON(json).then(snapshot);
@@ -235,7 +298,8 @@
       else if (action === 'align-center') align('center');
       else if (action === 'align-right') align('right');
       else if (action === 'shadow') updateProperty('shadow', !((selected() || {}).shadow));
-      else if (action === 'save') inform('Draft sementara tersimpan di perangkat. Login untuk simpan permanen.');
+      else if (action === 'save') saveDesign();
+      else if (action === 'my-designs') listDesigns();
     });
     root.querySelectorAll('[data-prop]').forEach(input => {
       input.addEventListener('input', () => updateProperty(input.dataset.prop, input.value));

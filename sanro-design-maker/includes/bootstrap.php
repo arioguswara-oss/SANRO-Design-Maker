@@ -11,6 +11,12 @@ function sanro_dm_register_assets() {
         wp_register_style('sanro-dm-shapes', SANRO_DM_URL . 'assets/shapes.css', array('sanro-dm-templates'), SANRO_DM_VERSION);
         wp_register_script('sanro-dm-fabric', SANRO_DM_URL . 'assets/vendor/fabric/index.min.js', array(), '7.4.0', true);
         wp_register_script('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.js', array('sanro-dm-fabric'), SANRO_DM_VERSION, true);
+        wp_localize_script('sanro-dm-editor', 'SANRO_DM_API', array(
+            'root' => esc_url_raw(rest_url('sanro-design-maker/v1/')),
+            'nonce' => is_user_logged_in() ? wp_create_nonce('wp_rest') : '',
+            'loggedIn' => is_user_logged_in(),
+            'loginUrl' => wp_login_url(home_url(isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/design-maker/')),
+        ));
     }
 }
 
@@ -79,6 +85,8 @@ function sanro_dm_render_editor() {
           </div>
           <h2>Layers</h2><ol class="sanro-dm__layers" data-layer-list></ol>
           <button type="button" class="sanro-dm__save" data-action="save">Simpan desain</button>
+          <button type="button" data-action="my-designs">Desain saya</button>
+          <div class="sanro-dm__my-designs" data-my-designs hidden></div>
           <p class="sanro-dm__privacy">Draft tersimpan di perangkat ini. Akun diperlukan untuk menyimpan permanen.</p>
         </aside>
       </div>

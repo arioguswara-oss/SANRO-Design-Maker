@@ -1,27 +1,25 @@
 # Progress ledger — 2026-11-26
 
-Baseline: 0%. Verified overall progress: 0.5%. Cycle 3 delta: 0 percentage points; shape-picker runtime remains unverified in browser. Weighting uses each stage's verified percentage multiplied by its mandate weight.
+Baseline: 0%. Verified overall progress: 0.5%. Current cycle adds server-side implementation, but weighted progress stays unchanged until WordPress/browser behavior is evidenced.
 
 | Stage | Weight | Verified within stage | Status |
 |---|---:|---:|---|
 | Core Editor | 25% | 2% | PARTIAL — shortcode, local asset wiring and editor mount verified by PHP smoke; browser interactions not verified |
 | Asset & Template | 20% | 0% | Six editable templates implemented; runtime NOT TESTED |
-| Account & My Designs | 15% | 0% | DECIDED; not implemented |
-| Studio Bridge | 15% | 0% | Source contract inspected; deployed staging plugin/flag state NOT VERIFIED |
+| Account & My Designs | 15% | 0% | Implemented in source: private account REST CRUD, claim guest-local draft after login, list/reopen/edit/duplicate/delete; runtime NOT TESTED |
+| Studio Bridge | 15% | 0% | Source contract inspected; deployed plugin/flag state NOT VERIFIED |
 | Admin | 10% | 0% | Foundation only; not functionally tested |
-| Private Rendering & Security | 10% | 0% | DECIDED; server-side pipeline not implemented |
+| Private Rendering & Security | 10% | 0% | Implemented in source: private filesystem guard, MIME/dimension validation, ownership checks, quotas, throttling and orphan asset GC; runtime NOT TESTED |
 | Final Acceptance | 5% | 0% | NOT TESTED |
 
-Implemented on `develop`: responsive editor shell; local Fabric.js 7.4.0 MIT bundle; transparent canvas; text, rectangle/circle/triangle/line shapes, raster image, six original editable starter templates, built-in transforms, layers, duplicate/delete, undo/redo, fill/stroke/opacity, alignment, shadow, pinch zoom and bounded IndexedDB guest draft recovery. PHP smoke verifies the shortcode mounts template and shape controls, local asset enqueue and print CTA. Editor interactions remain unverified.
-
-Studio source findings are in `docs/STUDIO-CONTRACT-READONLY.md`. Integration remains blocked on deployed plugin/feature-flag verification and mapping the Maker's single Fabric canvas into Studio's product-specific `front`/`back` schema.
+Implemented on `develop`: responsive editor shell; local Fabric.js 7.4.0 MIT bundle; transparent canvas; text, shapes, raster upload, starter templates, transforms, layers, duplicate/delete, undo/redo, object properties, pinch zoom, IndexedDB guest recovery; account-only save and My Designs REST/UI flows; private raster asset upload/read routes and design ownership/quota enforcement.
 
 Evidence:
-- PHP lint for plugin entrypoint, bootstrap and PHP smoke: PASS.
-- `php tests/php-smoke.php` — PASS.
-- `node --check` for editor JS and browser smoke script: PASS.
-- Fabric.js bundle `node --check`: PASS (unchanged from cycle 1).
-- Browser smoke — NOT TESTED. Chromium exits before page execution with sandbox crashpad `EPERM`; retry with crash-reporter flags had the same result.
-- WordPress MCP plugin inventory on staging — NOT VERIFIED; connector returned `Transport closed`.
+- PHP lint for plugin entrypoint, bootstrap, storage module and smoke harness: PASS.
+- `php tests/php-smoke.php` — PASS for shortcode, local asset wiring, canvas/templates/shapes and print CTA.
+- `node --check` for editor JS and browser smoke script — PASS.
+- Browser UI — NOT TESTED: no browser desktop/runner tool is exposed in this session; local Playwright package is missing. The previously failing local Chromium method was not retried.
+- WordPress runtime API, account ownership, upload MIME/dimension/quota checks, private path resolution, lifecycle GC and guest-to-account recovery — NOT TESTED.
+- Staging inventory and Studio source findings remain as previously documented; no staging write was performed.
 
-Known gaps: no WordPress runtime, browser interactions unverified, no private server-side image storage/rendering, no account save/claim, no asset provider/admin, no background removal, no wired Studio transfer. No staging or production changes.
+Known gaps: no browser or real WordPress runtime evidence, no server render, asset provider/admin catalog, background removal, local Google Fonts or wired Studio transfer. No installer built or uploaded. No staging or production changes.
