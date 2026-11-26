@@ -5,7 +5,7 @@ Guest-first graphic editor for kaoscetak.id. The plugin currently provides the l
 ## Current editor
 
 - Fabric.js 7.4.0 is bundled locally from upstream `fabricjs/fabric.js` release tag `v740`. No CDN or paid service is used.
-- Text, basic rectangle shape, PNG/JPEG/WebP upload (1.5 MiB maximum), selection, move/resize/rotate, duplicate/delete, layer selection, fill/stroke/opacity, alignment and shadow controls.
+- Text, basic rectangle shape, six original editable starter templates (vintage, streetwear, adventure, cartoon, floral and typography), PNG/JPEG/WebP upload (1.5 MiB maximum), selection, move/resize/rotate, duplicate/delete, layer selection, fill/stroke/opacity, alignment and shadow controls.
 - Undo/redo, keyboard shortcuts, guest draft recovery in IndexedDB (3 MiB serialized draft limit), mobile toolbar and responsive canvas.
 - The print CTA links to `/custom/`. Permanent account saves, asset providers, background removal, server rendering, private master storage and Studio transfer are not implemented in this editor cycle.
 
