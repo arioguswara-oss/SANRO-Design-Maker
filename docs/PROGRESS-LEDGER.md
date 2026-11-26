@@ -4,6 +4,8 @@ Baseline: 0%. Previous verified progress: 0.5%. Current verified progress: 0.5% 
 
 P0 mobile editor cycle: candidate `0.2.0-dev` received owner-supplied independent staging results (install/activation/frontend HTTP 200/image upload PASS; image drag/resize/responsive header FAIL). The fix is IMPLEMENTED locally as version `0.2.1-dev`. Earlier staging results are not post-fix verification.
 
+Owner accepted `0.2.1-dev` interaction evidence: upload, drag, resize up/down, pinch, and theme header/footer removal PASS. Owner requested a smaller, non-obscuring selection appearance and reported mobile toolbar/print clipping. `0.2.2-dev` addresses those controls/layout requests; visual browser/staging evidence is pending.
+
 | Stage | Weight | Verified within stage | Status |
 |---|---:|---:|---|
 | Core Editor | 25% | 2% | PARTIAL — shortcode, asset wiring and editor mount verified by PHP smoke; UI interactions NOT TESTED |
@@ -27,6 +29,8 @@ Evidence:
 - Browser, live Openverse and WordPress route/admin/storage integration — NOT TESTED. Known unavailable runners/runtime were not retried.
 - Staging, production and SANRO Studio unchanged.
 - P0 focused checks: PHP lint/smoke/storage/provider/render PASS; editor JS syntax PASS; mobile interaction contract PASS at 360/390/412/1440 CSS px for coordinate math and touch target sizing. Browser drag/resize/rotate/pinch, upload-layer regression and guest recovery after the fix remain NOT TESTED.
+- `0.2.2-dev` focused controls contract: PASS for Fabric 7.4 control config, 9 CSS px circular visual handles, separate bounded touch target sizing, hidden midpoint handles, rotate action, unlocked transforms, and mobile responsive sizing rules. Browser control rendering, mobile overflow and interaction regression NOT TESTED.
+- TESTING installer `0.2.2-dev`, source `0e0911872190d6084dc7a88d02fb0c864f87ab2f`, uploaded privately: [ZIP](https://drive.google.com/file/d/1EOYW88B3liPtoxZ2hcmog7m7knJlDLnN/view?usp=drivesdk), [SHA256 manifest](https://drive.google.com/file/d/1RXlB3tdlTR-eezTLuNUMG5mFexTUH0fE/view?usp=drivesdk), [release notes](https://docs.google.com/document/d/181ZAhH0NEj4K5sjY2mu13sTROwtjgz0v/edit?usp=drivesdk&ouid=102665342940633303649&rtpof=true&sd=true). Local SHA256 `ba70e1dc23086ee4570061937ec330676398d4c7794fe3c0c640730e790122dc`. Drive confirms exact name/size/parent and `shared=false`; remote checksum NOT VERIFIED.
 - TESTING installer `0.2.1-dev`, source `d38b3cdf876adbbb393a8f87c9e72393ee78f2bf`, uploaded privately to Releases: [ZIP](https://drive.google.com/file/d/1MzGMTIt_9NHF30p4SpHoogGXsMCWacwC/view?usp=drivesdk), [SHA256 manifest](https://drive.google.com/file/d/1CCMFMWdIIrEjH3g7zoX2aEKphLo0GjJO/view?usp=drivesdk), [release notes](https://docs.google.com/document/d/1s8hOgOPE3xKh0okzCsbd3VwWBvmVxUYq/edit?usp=drivesdk&ouid=102665342940633303649&rtpof=true&sd=true). Local SHA256 `0b273327a7f5c76b13c0c6aeff7e620c88b3a5d6858c1a2956f51c1fa2070692`. Drive confirms private, expected parent and byte size; remote SHA256 NOT VERIFIED.
 - No staging, production, SANRO Studio, Hermes or global configuration changes.
 
