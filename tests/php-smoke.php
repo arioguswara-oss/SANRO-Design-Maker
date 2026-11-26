@@ -17,7 +17,7 @@ function esc_url($value) { return $value; } function home_url($path) { return 'h
 function current_user_can($cap) { return $cap === 'manage_options'; } function esc_html($value) { return $value; }
 require __DIR__ . '/../sanro-design-maker/sanro-design-maker.php';
 sanro_dm_register_editor(); sanro_dm_enqueue_editor_assets(); $html = sanro_dm_render_editor();
-if (strpos($html, 'data-design-canvas') === false || strpos($html, 'CETAK DESAIN INI') === false || strpos($html, 'data-template-list') === false) throw new RuntimeException('Editor markup, templates or print CTA missing');
+if (strpos($html, 'data-design-canvas') === false || strpos($html, 'CETAK DESAIN INI') === false || strpos($html, 'data-template-list') === false || strpos($html, 'data-shape-type="circle"') === false) throw new RuntimeException('Editor markup, templates, shapes or print CTA missing');
 if (!in_array('sanro-dm-editor', $GLOBALS['enqueued'], true)) throw new RuntimeException('Editor assets not enqueued');
 if (strpos($GLOBALS['scripts'][0][1], 'assets/vendor/fabric/index.min.js') === false) throw new RuntimeException('Fabric must be locally bundled');
 if (strpos($html, 'https://example.test/custom/') === false) throw new RuntimeException('Print CTA target missing');
