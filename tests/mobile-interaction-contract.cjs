@@ -27,9 +27,26 @@ assert.match(css, /\.sanro-dm__print\{display:none!important\}/);
 assert.match(css, /SANRO_DM_VERSION/);
 assert.match(css, /object-controls\.js/);
 assert.match(css, /mobile-controls\.css/);
-assert.match(mobileCss, /overflow: hidden/);
-assert.match(mobileCss, /text-overflow: ellipsis/);
-assert.match(plugin, /Version: 0\.2\.2-dev/);
+assert.match(mobileCss, /height: 100vh !important;[\s\S]*height: 100dvh !important;/, 'dynamic viewport has a legacy fallback');
+assert.match(mobileCss, /flex-direction: column !important/);
+assert.match(mobileCss, /min-width: 0 !important/);
+assert.match(mobileCss, /\.sanro-dm__mobile-tools\s*\{[\s\S]*overflow-x: auto/);
+assert.match(mobileCss, /\.sanro-dm__properties,[\s\S]*overflow-y: auto/);
+assert.match(mobileCss, /\.sanro-dm__mobile-print\s*\{[\s\S]*position: relative !important/);
+assert.match(mobileCss, /\.sanro-dm__mobile-tools\s*\{[\s\S]*position: relative !important/);
+assert.match(mobileCss, /safe-area-inset-bottom/);
+assert.match(mobileCss, /\.sanro-dm__stage\s*\{[\s\S]*100dvh - 190px/);
+assert.match(plugin, /Version: 0\.2\.3-dev/);
+
+// Layout budget contract: header 56px, CTA 48px including margin, toolbar 60px,
+// 190px stage reserve and safe-area are all accounted for at target phone widths.
+for (const [viewport, height, safe] of [[360, 640, 0], [390, 780, 24], [412, 844, 24]]) {
+  const stageWidth = Math.min(viewport - 16, height - 190 - safe);
+  const workspaceHeight = height - safe - 56 - 48 - 60;
+  assert.ok(stageWidth <= viewport - 16, `canvas fits ${viewport}px viewport`);
+  assert.ok(stageWidth <= workspaceHeight, `canvas fits remaining ${viewport}px workspace`);
+  assert.ok(56 + workspaceHeight + 48 + 60 <= height - safe, `header, canvas and controls fit ${viewport}px viewport`);
+}
 
 const fabric = require(path.join(root, 'sanro-design-maker/assets/vendor/fabric/index.min.js'));
 const configureControls = require(path.join(root, 'sanro-design-maker/assets/object-controls.js'));
