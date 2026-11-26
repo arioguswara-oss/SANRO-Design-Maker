@@ -1,23 +1,19 @@
-# Core Editor Cycle 1
+# SANRO Design Maker — Execution record
 
-Execution authority: Rio's SANRO DESIGN MAKER V1 MASTER EXECUTION MANDATE. Codex CLI executes on `develop`; this file is a progress record and does not require ChatGPT Work authorization.
+Executor authority: Rio's SANRO DESIGN MAKER V1 MASTER EXECUTION MANDATE. Codex CLI develops on `develop`. This file is a cycle record, not a separate approval requirement.
 
-Foundation checkpoint: 9b2b567b8b31210b2f9833f2740d5b27922e6f0f. The starting plugin contained a shortcode placeholder and an admin menu.
+## Cycle 1 — Core editor foundation
 
-Implemented in this cycle:
-- Responsive shortcode shell and transparent canvas using locally bundled Fabric.js 7.4.0 (`v740`, MIT).
-- Text and rectangle tools; local PNG/JPEG/WebP upload capped at 1.5 MiB; Fabric selection and transform controls.
-- Layer selection, duplicate/delete, undo/redo, fill/stroke/opacity, alignment, shadow, touch pinch zoom and keyboard shortcuts.
-- Guest IndexedDB draft save/recovery with a 3 MiB serialized draft limit.
-- Local PHP smoke and browser smoke test artifacts.
+Started from foundation SHA `9b2b567b8b31210b2f9833f2740d5b27922e6f0f`. Added the responsive shortcode shell, Fabric.js 7.4.0 local MIT bundle, transparent canvas, raster/text/shape editing, transforms, basic properties, layers, history and IndexedDB guest draft recovery.
 
-Evidence:
-- PHP lint for plugin entrypoint and bootstrap: PASS.
-- PHP shortcode/assets/CTA smoke: PASS.
-- JavaScript syntax checks for editor, Fabric bundle and browser test: PASS.
-- Browser interaction run: NOT TESTED. Chromium process was stopped before page execution by sandbox crashpad `EPERM`; a retry with crash reporter flags hit the same restriction.
-- Staging, production and SANRO Studio were not accessed or changed.
+PHP lint and shortcode smoke passed. Node syntax checks passed. Browser smoke could not execute because Chromium crashes in sandbox startup with crashpad `EPERM`.
 
-Next cycle: obtain a browser runner permitted by the sandbox and verify editor interactions; then continue image/object and mobile recovery behavior, read-only Studio contract inspection, and security/server-side storage design. Keep private production masters out of browser storage; current IndexedDB draft is guest-only local state.
+## Cycle 2 — Original templates and Studio contract
 
-Authorization boundaries: commit only to `develop`; no `main` merge, staging install/change, deployment, production write, SANRO Studio edit, credentials, paid API or Rclone.
+Added a responsive template picker with six original editable compositions: vintage, streetwear, adventure, cartoon, floral and typography. No external/proprietary assets are used. PHP lint/smoke and JavaScript syntax checks pass; the browser test now includes template selection but remains NOT TESTED because the same Chromium startup restriction persists.
+
+Read-only source inspection found Studio draft routes in `docs/STUDIO-CONTRACT-READONLY.md`. The local Studio checkout is branch `work/hermes-studio-restore-20261123` at `9bd20d583c35db38b2120dc3c871bc8dda8b8d12`, not verified as the deployed staging revision. Staging plugin inventory returned `Transport closed`. No endpoint was called.
+
+Next cycle: get an allowed browser runtime; verify interactions and templates; continue private server storage/auth; verify actual staging Studio version and flags read-only; build the product/front/back adapter only after schema mapping is tested.
+
+Boundaries: commit only to `develop`; no main merge, staging install/change, deployment, Studio edits, production writes, credentials, paid services, Rclone, Hermes or global VPS changes.
