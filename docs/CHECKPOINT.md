@@ -33,7 +33,9 @@
 - Implement/test PNG raster production output when a supported server raster engine is available; current server master is SVG only.
 - Studio source requires product ID, `front`/`back` geometry and a Studio-authorized private master reference. The Maker's single canvas/SVG master has no proven mapping; do not send guessed requests or change SANRO Studio.
 - Only Anton is bundled. More Google Font binaries can be added from their official repository with licenses.
-- Build an installable ZIP labeled TESTING from `88491d4f2a4d90e88c3f14bc8e1ff12335a0c386`, run ZIP/security minimum checks, upload privately to SANRO Design Maker/Releases and add checksum/release notes.
+- TESTING installer built from `88491d4f2a4d90e88c3f14bc8e1ff12335a0c386`: 211,528 bytes, SHA256 `1f9cee487fbcadb69c09f667bdcafea3e3e9cd04d9114688c522467362506963`. ZIP CRC/root structure/license and symlink checks PASS. Uploaded to Drive `SANRO Design Maker/Releases`; remote metadata confirms exact size/parent and private owner-only sharing. Drive did not return a `sha256Checksum`, so remote checksum is NOT VERIFIED.
+- Installer: [TESTING ZIP](https://drive.google.com/file/d/1ZkTPT8X0mP3bnpQMgPVpeQQBVB3edsuc/view?usp=drivesdk) · [SHA256SUMS](https://drive.google.com/file/d/1sVk55SN_heWEpS0WN5pgHM0cpDM4Iyog/view?usp=drivesdk) · [release notes](https://docs.google.com/document/d/11sK0sHBkJHMhlaaYHyo8TynouGYTWwCN/edit?usp=drivesdk&ouid=102665342940633303649&rtpof=true&sd=true) · [source commit metadata](https://drive.google.com/file/d/1eKW3aruJJrMghiZ_mx3bzgzvuCSziOHZ/view?usp=drivesdk).
+- Continue remaining independent V1 work; no installer or feature is FINAL RELEASE.
 - Continue remaining independent V1 work; no installer or feature is FINAL RELEASE.
 
 ## Authorization
