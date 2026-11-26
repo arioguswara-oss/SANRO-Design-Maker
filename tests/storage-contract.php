@@ -27,4 +27,6 @@ $foreign = json_encode(array('objects' => array(array('type' => 'image', 'src' =
 expect(is_wp_error(sanro_dm_validate_design($foreign, 7)), 'asset owned by another account should be rejected');
 $tooMany = json_encode(array('objects' => array_fill(0, 251, array('type' => 'rect'))));
 expect(is_wp_error(sanro_dm_validate_design($tooMany, 7)), 'object limit should be enforced');
+expect(sanro_dm_share_references_asset(array('objects'=>array(array('data'=>array('assetId'=>'owned-asset')))),'owned-asset'), 'share may access referenced owner asset');
+expect(!sanro_dm_share_references_asset(array('objects'=>array(array('data'=>array('assetId'=>'owned-asset')))),'other-asset'), 'share must not access unreferenced private assets');
 echo "Storage contract PASS: private references, inline/remote images, ownership and object count\n";

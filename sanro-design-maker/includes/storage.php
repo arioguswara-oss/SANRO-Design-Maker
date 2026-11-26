@@ -19,17 +19,19 @@ function sanro_dm_private_root() {
 
 function sanro_dm_tables() {
     global $wpdb;
-    return array('designs' => $wpdb->prefix . 'sanro_dm_designs', 'assets' => $wpdb->prefix . 'sanro_dm_assets');
+    return array('designs' => $wpdb->prefix . 'sanro_dm_designs', 'assets' => $wpdb->prefix . 'sanro_dm_assets', 'shares' => $wpdb->prefix . 'sanro_dm_shares', 'masters' => $wpdb->prefix . 'sanro_dm_masters');
 }
 function sanro_dm_install_storage() {
     global $wpdb;
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     $t = sanro_dm_tables(); $collate = $wpdb->get_charset_collate();
     dbDelta("CREATE TABLE {$t['designs']} (id char(36) NOT NULL, user_id bigint(20) unsigned NOT NULL, title varchar(190) NOT NULL, design longtext NOT NULL, created_at datetime NOT NULL, updated_at datetime NOT NULL, PRIMARY KEY  (id), KEY user_updated (user_id,updated_at)) $collate;");
-    dbDelta("CREATE TABLE {$t['assets']} (id char(36) NOT NULL, user_id bigint(20) unsigned NOT NULL, path varchar(255) NOT NULL, mime varchar(32) NOT NULL, bytes bigint(20) unsigned NOT NULL, created_at datetime NOT NULL, PRIMARY KEY  (id), KEY user_id (user_id)) $collate;");
+    dbDelta("CREATE TABLE {$t['assets']} (id char(36) NOT NULL, user_id bigint(20) unsigned NOT NULL, path varchar(255) NOT NULL, mime varchar(32) NOT NULL, bytes bigint(20) unsigned NOT NULL, source_url text NULL, attribution text NULL, license varchar(40) NULL, license_url text NULL, created_at datetime NOT NULL, PRIMARY KEY  (id), KEY user_id (user_id)) $collate;");
+    dbDelta("CREATE TABLE {$t['shares']} (id char(36) NOT NULL, design_id char(36) NOT NULL, user_id bigint(20) unsigned NOT NULL, token_hash char(64) NOT NULL, expires_at datetime NOT NULL, revoked_at datetime NULL, created_at datetime NOT NULL, PRIMARY KEY  (id), UNIQUE KEY token_hash (token_hash), KEY design_owner (design_id,user_id), KEY expires_at (expires_at)) $collate;");
+    dbDelta("CREATE TABLE {$t['masters']} (id char(36) NOT NULL, design_id char(36) NOT NULL, user_id bigint(20) unsigned NOT NULL, path varchar(255) NOT NULL, sha256 char(64) NOT NULL, bytes bigint(20) unsigned NOT NULL, created_at datetime NOT NULL, PRIMARY KEY  (id), UNIQUE KEY design_owner (design_id,user_id), KEY user_id (user_id)) $collate;");
 }
 function sanro_dm_storage_init() {
-    if (get_option('sanro_dm_storage_schema') !== '1') { sanro_dm_install_storage(); update_option('sanro_dm_storage_schema', '1', false); }
+    if (get_option('sanro_dm_storage_schema') !== '4') { sanro_dm_install_storage(); update_option('sanro_dm_storage_schema', '4', false); }
 }
 function sanro_dm_uuid() {
     return sprintf('%04x%04x-%04x-4%03x-%04x-%04x%04x%04x', random_int(0, 65535), random_int(0, 65535), random_int(0, 65535), random_int(0, 4095), random_int(0, 16383) | 0x8000, random_int(0, 65535), random_int(0, 65535), random_int(0, 65535));
@@ -54,7 +56,9 @@ function sanro_dm_upload_asset(WP_REST_Request $request) {
     $root = sanro_dm_private_root(); if (is_wp_error($root)) return $root;
     $id = sanro_dm_uuid(); $relative = 'assets/' . $uid . '/' . $id . '.' . $allowed[$mime]; $path = $root . '/' . $relative;
     if (!wp_mkdir_p(dirname($path)) || !move_uploaded_file($file['tmp_name'], $path)) return new WP_Error('storage_failed', 'Private asset storage failed.', array('status' => 500));
-    @chmod($path, 0600); $wpdb->insert($tables['assets'], array('id' => $id, 'user_id' => $uid, 'path' => $relative, 'mime' => $mime, 'bytes' => (int) $file['size'], 'created_at' => current_time('mysql', true)), array('%s','%d','%s','%s','%d','%s'));
+    @chmod($path, 0600); $source=(string)$request->get_param('source_url');$attribution=sanitize_text_field($request->get_param('attribution'));$license=sanitize_text_field($request->get_param('license'));$licenseUrl=(string)$request->get_param('license_url');$providerId=sanitize_text_field($request->get_param('provider_id'));
+    if ($source || $license || $licenseUrl || $attribution || $providerId) { $verified=$providerId?get_transient('sanro_dm_openverse_'.md5($providerId)):false;if(!$verified||!hash_equals((string)$verified['source_url'],$source)||!hash_equals((string)$verified['attribution'],$attribution)||!hash_equals((string)$verified['license'],$license)||!hash_equals((string)$verified['license_url'],$licenseUrl)||!sanro_dm_allowed_license($license)||!sanro_dm_public_https_url($source)||!sanro_dm_public_https_url($licenseUrl)){@unlink($path);return new WP_Error('invalid_provenance','Asset source and commercial-use license do not match a verified Openverse result.',array('status'=>400));} }
+    $wpdb->insert($tables['assets'], array('id' => $id, 'user_id' => $uid, 'path' => $relative, 'mime' => $mime, 'bytes' => (int) $file['size'], 'source_url'=>$source, 'attribution'=>$attribution, 'license'=>$license, 'license_url'=>$licenseUrl, 'created_at' => current_time('mysql', true)), array('%s','%d','%s','%s','%d','%s','%s','%s','%s','%s'));
     return new WP_REST_Response(array('id' => $id, 'url' => rest_url('sanro-design-maker/v1/assets/' . $id), 'mime' => $mime), 201);
 }
 function sanro_dm_get_asset(WP_REST_Request $request) {
@@ -99,15 +103,48 @@ function sanro_dm_designs(WP_REST_Request $request) {
 function sanro_dm_single_design(WP_REST_Request $request) {
     global $wpdb; $uid=get_current_user_id(); $id=sanitize_text_field($request['id']); $t=sanro_dm_tables(); $method=$request->get_method();
     $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['designs']} WHERE id=%s AND user_id=%d",$id,$uid)); if (!$row) return new WP_Error('not_found','Design not found.',array('status'=>404));
-    if ($method==='DELETE') { $wpdb->delete($t['designs'],array('id'=>$id,'user_id'=>$uid),array('%s','%d')); return new WP_REST_Response(null,204); }
+    if ($method==='DELETE') { if(function_exists('sanro_dm_cleanup_design_privates'))sanro_dm_cleanup_design_privates($id,$uid);$wpdb->delete($t['designs'],array('id'=>$id,'user_id'=>$uid),array('%s','%d')); return new WP_REST_Response(null,204); }
     if ($method==='PUT') { $request->set_param('id',$id); return sanro_dm_designs($request); }
     $design=json_decode($row->design,true); return rest_ensure_response(array('id'=>$id,'title'=>$row->title,'design'=>$design));
+}
+function sanro_dm_public_templates() {return rest_ensure_response((array)get_option('sanro_dm_templates',array()));}
+function sanro_dm_create_share(WP_REST_Request $request) {
+    global $wpdb;$uid=get_current_user_id();$rate=sanro_dm_rate_limit($uid,'share',15);if(is_wp_error($rate))return $rate;$id=sanitize_text_field($request['id']);$t=sanro_dm_tables();
+    $owned=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['designs']} WHERE id=%s AND user_id=%d",$id,$uid));if(!$owned)return new WP_Error('not_found','Design not found.',array('status'=>404));
+    $token=bin2hex(random_bytes(32));$shareId=sanro_dm_uuid();$expires=gmdate('Y-m-d H:i:s',time()+7*DAY_IN_SECONDS);
+    $wpdb->update($t['shares'],array('revoked_at'=>current_time('mysql',true)),array('design_id'=>$id,'user_id'=>$uid,'revoked_at'=>null),array('%s'),array('%s','%d','%s'));
+    $wpdb->insert($t['shares'],array('id'=>$shareId,'design_id'=>$id,'user_id'=>$uid,'token_hash'=>hash('sha256',$token),'expires_at'=>$expires,'revoked_at'=>null,'created_at'=>current_time('mysql',true)),array('%s','%s','%d','%s','%s','%s','%s'));
+    return new WP_REST_Response(array('id'=>$shareId,'url'=>home_url('/design-maker/#share='.$token),'expires_at'=>$expires),201);
+}
+function sanro_dm_list_shares(WP_REST_Request $request) {
+    global $wpdb;$id=sanitize_text_field($request['id']);$t=sanro_dm_tables();$owned=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['designs']} WHERE id=%s AND user_id=%d",$id,get_current_user_id()));if(!$owned)return new WP_Error('not_found','Design not found.',array('status'=>404));
+    $rows=$wpdb->get_results($wpdb->prepare("SELECT id,expires_at FROM {$t['shares']} WHERE design_id=%s AND user_id=%d AND revoked_at IS NULL AND expires_at>%s ORDER BY created_at DESC",$id,get_current_user_id(),current_time('mysql',true)),ARRAY_A);return rest_ensure_response($rows);
+}
+function sanro_dm_revoke_share(WP_REST_Request $request) {
+    global $wpdb;$id=sanitize_text_field($request['id']);$t=sanro_dm_tables();$changed=$wpdb->update($t['shares'],array('revoked_at'=>current_time('mysql',true)),array('id'=>$id,'user_id'=>get_current_user_id(),'revoked_at'=>null),array('%s'),array('%s','%d','%s'));if(!$changed)return new WP_Error('not_found','Share link not found.',array('status'=>404));return new WP_REST_Response(array('revoked'=>true),200);
+}
+function sanro_dm_public_share_row($token) {
+    global $wpdb;$t=sanro_dm_tables();$hash=hash('sha256',(string)$token);$row=$wpdb->get_row($wpdb->prepare("SELECT s.*,d.title,d.design FROM {$t['shares']} s INNER JOIN {$t['designs']} d ON d.id=s.design_id AND d.user_id=s.user_id WHERE s.token_hash=%s AND s.revoked_at IS NULL AND s.expires_at>%s",$hash,current_time('mysql',true)));return $row;
+}
+function sanro_dm_share_references_asset($design,$assetId) {foreach((array)($design['objects']??array()) as $object)if(isset($object['data']['assetId'])&&hash_equals((string)$object['data']['assetId'],(string)$assetId))return true;return false;}
+function sanro_dm_get_public_share(WP_REST_Request $request) {
+    $row=sanro_dm_public_share_row($request['token']);if(!$row)return new WP_Error('not_found','Share link is expired or revoked.',array('status'=>404));return rest_ensure_response(array('title'=>$row->title,'design'=>json_decode($row->design,true),'read_only'=>true));
+}
+function sanro_dm_get_shared_asset(WP_REST_Request $request) {
+    global $wpdb;$row=sanro_dm_public_share_row($request['token']);if(!$row)return new WP_Error('not_found','Share link is expired or revoked.',array('status'=>404));$assetId=sanitize_text_field($request['asset']);$design=json_decode($row->design,true);
+    if(!sanro_dm_share_references_asset($design,$assetId))return new WP_Error('not_found','Shared asset not found.',array('status'=>404));$t=sanro_dm_tables();$asset=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['assets']} WHERE id=%s AND user_id=%d",$assetId,$row->user_id));if(!$asset)return new WP_Error('not_found','Shared asset not found.',array('status'=>404));
+    $root=sanro_dm_private_root();if(is_wp_error($root))return $root;$path=realpath($root.'/'.$asset->path);if(!$path||strpos($path,$root.DIRECTORY_SEPARATOR)!==0||!is_file($path))return new WP_Error('not_found','Shared asset not found.',array('status'=>404));header('Content-Type: '.$asset->mime);header('Content-Length: '.filesize($path));header('Cache-Control: private, no-store');header('X-Content-Type-Options: nosniff');readfile($path);exit;
 }
 function sanro_dm_register_storage_routes() {
     register_rest_route('sanro-design-maker/v1','/assets',array('methods'=>'POST','callback'=>'sanro_dm_upload_asset','permission_callback'=>'sanro_dm_storage_auth'));
     register_rest_route('sanro-design-maker/v1','/assets/(?P<id>[a-f0-9-]+)',array('methods'=>'GET','callback'=>'sanro_dm_get_asset','permission_callback'=>'sanro_dm_storage_auth'));
+    register_rest_route('sanro-design-maker/v1','/templates',array('methods'=>'GET','callback'=>'sanro_dm_public_templates','permission_callback'=>'__return_true'));
     register_rest_route('sanro-design-maker/v1','/designs',array('methods'=>array('GET','POST'),'callback'=>'sanro_dm_designs','permission_callback'=>'sanro_dm_storage_auth'));
     register_rest_route('sanro-design-maker/v1','/designs/(?P<id>[a-f0-9-]+)',array('methods'=>array('GET','PUT','DELETE'),'callback'=>'sanro_dm_single_design','permission_callback'=>'sanro_dm_storage_auth'));
+    register_rest_route('sanro-design-maker/v1','/designs/(?P<id>[a-f0-9-]+)/shares',array(array('methods'=>'GET','callback'=>'sanro_dm_list_shares','permission_callback'=>'sanro_dm_storage_auth'),array('methods'=>'POST','callback'=>'sanro_dm_create_share','permission_callback'=>'sanro_dm_storage_auth')));
+    register_rest_route('sanro-design-maker/v1','/shares/(?P<id>[a-f0-9-]+)',array('methods'=>'DELETE','callback'=>'sanro_dm_revoke_share','permission_callback'=>'sanro_dm_storage_auth'));
+    register_rest_route('sanro-design-maker/v1','/shares/(?P<token>[a-f0-9]{64})',array('methods'=>'GET','callback'=>'sanro_dm_get_public_share','permission_callback'=>'__return_true'));
+    register_rest_route('sanro-design-maker/v1','/shares/(?P<token>[a-f0-9]{64})/assets/(?P<asset>[a-f0-9-]+)',array('methods'=>'GET','callback'=>'sanro_dm_get_shared_asset','permission_callback'=>'__return_true'));
 }
 function sanro_dm_gc() {
     global $wpdb; $t=sanro_dm_tables(); $cutoff=gmdate('Y-m-d H:i:s',time()-180*DAY_IN_SECONDS); $rows=$wpdb->get_results($wpdb->prepare("SELECT id,path FROM {$t['assets']} WHERE created_at < %s",$cutoff));

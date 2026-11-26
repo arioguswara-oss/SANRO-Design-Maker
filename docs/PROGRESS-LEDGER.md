@@ -1,26 +1,28 @@
 # Progress ledger — 2026-11-26
 
-Baseline: 0%. Verified overall progress: 0.5%. Current cycle adds server-side implementation, but weighted progress stays unchanged until WordPress/browser behavior is evidenced.
+Baseline: 0%. Previous verified progress: 0.5%. Current verified progress: 0.5% (delta 0 points). This cycle added local, focused evidence; Admin, account, provider, rendering and browser behavior still need WordPress/browser QA before weighted credit changes.
 
 | Stage | Weight | Verified within stage | Status |
 |---|---:|---:|---|
-| Core Editor | 25% | 2% | PARTIAL — shortcode, local asset wiring and editor mount verified by PHP smoke; browser interactions not verified |
-| Asset & Template | 20% | 0% | Six editable templates implemented; runtime NOT TESTED |
-| Account & My Designs | 15% | 0% | Implemented in source: private account REST CRUD, claim guest-local draft after login, list/reopen/edit/duplicate/delete; runtime NOT TESTED |
-| Studio Bridge | 15% | 0% | Source contract inspected; deployed plugin/flag state NOT VERIFIED |
-| Admin | 10% | 0% | Foundation only; not functionally tested |
-| Private Rendering & Security | 10% | 0% | Implemented in source: private filesystem guard, MIME/dimension validation, ownership checks, quotas, throttling and orphan asset GC; runtime NOT TESTED |
+| Core Editor | 25% | 2% | PARTIAL — shortcode, asset wiring and editor mount verified by PHP smoke; UI interactions NOT TESTED |
+| Asset & Template | 20% | 0% | IMPLEMENTED — curated Openverse search/import, editable admin templates, bundled Anton; live API/template UI NOT TESTED |
+| Account & My Designs | 15% | 0% | IMPLEMENTED — owner-scoped CRUD, 7-day share/revoke, read-only share assets; WordPress REST runtime NOT TESTED |
+| Studio Bridge | 15% | 0% | BLOCKED — source contract requires product ID, front/back schema and owner-bound Studio master refs; Maker mapping/staging state NOT VERIFIED |
+| Admin | 10% | 0% | IMPLEMENTED — all nine native admin sections and capability/nonce-protected actions; WordPress admin runtime NOT TESTED |
+| Private Rendering & Security | 10% | 0% | IMPLEMENTED — private filesystem guard, validated uploads, SSRF-screened provider proxy, scoped shares and private SVG master; WordPress storage/raster runtime NOT TESTED |
 | Final Acceptance | 5% | 0% | NOT TESTED |
 
-Implemented on `develop`: responsive editor shell; local Fabric.js 7.4.0 MIT bundle; transparent canvas; text, shapes, raster upload, starter templates, transforms, layers, duplicate/delete, undo/redo, object properties, pinch zoom, IndexedDB guest recovery; account-only save and My Designs REST/UI flows; private raster asset upload/read routes and design ownership/quota enforcement.
+Implemented source on `develop`: editor and templates; private image upload/CRUD; admin catalogue; Openverse import with commercial license allowlist and attribution; local Anton font plus licensed WOFF2 upload workflow; client-side flat-background removal; owner-revocable share links; watermarked low-resolution JPEG preview; owner-only scalable SVG master generation stored privately.
 
 Evidence:
-- PHP lint for plugin entrypoint, bootstrap, storage module and smoke harness: PASS.
-- `php tests/php-smoke.php` — PASS for shortcode, local asset wiring, canvas/templates/shapes and print CTA.
-- `php tests/storage-contract.php` — PASS for accepting owned private asset refs and rejecting inline data, remote URLs, unowned asset IDs and >250 objects.
-- `node --check` for editor JS and browser smoke script — PASS.
-- Browser UI — NOT TESTED: no browser desktop/runner tool is exposed in this session; local Playwright package is missing. The previously failing local Chromium method was not retried.
-- WordPress runtime API, account ownership, upload MIME/dimension/quota checks, private path resolution, lifecycle GC and guest-to-account recovery — NOT TESTED.
-- Staging inventory and Studio source findings remain as previously documented; no staging write was performed.
+- PHP lint for all plugin/test PHP files — PASS.
+- `php tests/php-smoke.php` — PASS for shortcode, asset wiring, canvas/templates/shapes and CTA.
+- `php tests/storage-contract.php` — PASS for private asset ownership references, data URL/remote rejection, object cap and share asset scoping.
+- `php tests/provider-contract.php` — PASS for commercial license allowlist, HTTPS/IP SSRF rejection, template image policy and Google Font source match.
+- `php tests/render-contract.php` — PASS for escaped SVG text, 4000 × 4000 SVG dimensions, safe type/color filters, private image refs and bundled Anton embedding.
+- `node --check` for editor and background-removal JS — PASS.
+- `node tests/remove-background.test.cjs` — PASS (3 focused pixel tests).
+- Browser, live Openverse and WordPress route/admin/storage integration — NOT TESTED. Known unavailable runners/runtime were not retried.
+- Staging, production and SANRO Studio unchanged.
 
-Known gaps: no browser or real WordPress runtime evidence, no server render, asset provider/admin catalog, background removal, local Google Fonts or wired Studio transfer. No installer built or uploaded. No staging or production changes.
+Known gaps: no WordPress/browser runtime evidence; no raster PNG/Imagick/GD renderer; Studio private master mapping and two-sided geometry remain unverified; other Google Font files are not bundled; background removal is flat-color only; final acceptance NOT TESTED. Installer will be labeled TESTING and is not production-ready.

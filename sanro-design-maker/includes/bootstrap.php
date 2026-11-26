@@ -10,13 +10,18 @@ function sanro_dm_register_assets() {
         wp_register_style('sanro-dm-templates', SANRO_DM_URL . 'assets/templates.css', array('sanro-dm-editor'), SANRO_DM_VERSION);
         wp_register_style('sanro-dm-shapes', SANRO_DM_URL . 'assets/shapes.css', array('sanro-dm-templates'), SANRO_DM_VERSION);
         wp_register_script('sanro-dm-fabric', SANRO_DM_URL . 'assets/vendor/fabric/index.min.js', array(), '7.4.0', true);
-        wp_register_script('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.js', array('sanro-dm-fabric'), SANRO_DM_VERSION, true);
+        wp_register_script('sanro-dm-remove-bg', SANRO_DM_URL . 'assets/remove-background.js', array(), SANRO_DM_VERSION, true);
+        wp_register_script('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.js', array('sanro-dm-fabric','sanro-dm-remove-bg'), SANRO_DM_VERSION, true);
         wp_localize_script('sanro-dm-editor', 'SANRO_DM_API', array(
             'root' => esc_url_raw(rest_url('sanro-design-maker/v1/')),
             'nonce' => is_user_logged_in() ? wp_create_nonce('wp_rest') : '',
             'loggedIn' => is_user_logged_in(),
             'loginUrl' => wp_login_url(home_url(isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/design-maker/')),
+            'fonts' => array_values(array_map(function ($font) { return array('family'=>$font['family'],'url'=>$font['url']); }, (array)get_option('sanro_dm_fonts',array()))),
+            'watermark' => sanitize_text_field(get_option('sanro_dm_watermark','kaoscetak.id')),
         ));
+        $fontCss='@font-face{font-family:"Anton";src:url("'.esc_url(SANRO_DM_URL.'assets/fonts/Anton-Regular.ttf').'") format("truetype");font-style:normal;font-weight:400;font-display:swap;}';foreach((array)get_option('sanro_dm_fonts',array()) as $font){if(empty($font['family'])||empty($font['file'])||!in_array($font['family'],sanro_dm_font_families(),true)||basename($font['file'])!==$font['file']||pathinfo($font['file'],PATHINFO_EXTENSION)!=='woff2')continue;$uploads=wp_upload_dir();$url=trailingslashit($uploads['baseurl']).'sanro-design-maker-fonts/'.rawurlencode($font['file']);$fontCss.='@font-face{font-family:"'.esc_attr($font['family']).'";src:url("'.esc_url($url).'") format("woff2");font-style:normal;font-weight:100 900;font-display:swap;}';}
+        if($fontCss)wp_add_inline_style('sanro-dm-editor',$fontCss);
     }
 }
 
@@ -30,6 +35,7 @@ function sanro_dm_enqueue_editor_assets() {
     wp_enqueue_style('sanro-dm-shapes');
     wp_enqueue_script('sanro-dm-editor');
 }
+function sanro_dm_referrer_policy() { $page=get_post();if($page&&has_shortcode($page->post_content,'sanro_design_maker'))echo '<meta name="referrer" content="no-referrer">'; }
 
 function sanro_dm_render_editor() {
     sanro_dm_register_assets();
@@ -45,6 +51,7 @@ function sanro_dm_render_editor() {
         <div class="sanro-dm__header-actions">
           <button type="button" data-action="undo" aria-label="<?php echo esc_attr__('Undo', 'sanro-design-maker'); ?>" title="Undo">↶</button>
           <button type="button" data-action="redo" aria-label="<?php echo esc_attr__('Redo', 'sanro-design-maker'); ?>" title="Redo">↷</button>
+          <button type="button" data-action="download-preview">Preview</button>
           <span class="sanro-dm__saved" data-save-status role="status" aria-live="polite">Draft lokal</span>
           <a class="sanro-dm__print" href="<?php echo esc_url(home_url('/custom/')); ?>">CETAK DESAIN INI</a>
         </div>
@@ -58,10 +65,15 @@ function sanro_dm_render_editor() {
         <button type="button" data-shape-type="rect">Persegi</button><button type="button" data-shape-type="circle">Lingkaran</button>
         <button type="button" data-shape-type="triangle">Segitiga</button><button type="button" data-shape-type="line">Garis</button>
       </section>
+      <section class="sanro-dm__asset-panel" data-asset-panel hidden aria-label="Cari aset berlisensi komersial">
+        <label>Cari aset Openverse <input type="search" data-asset-query maxlength="100" placeholder="Contoh: mountain illustration"></label>
+        <button type="button" data-action="asset-search">Cari aset</button><div data-asset-results aria-live="polite"></div>
+      </section>
       <div class="sanro-dm__workspace">
         <aside class="sanro-dm__rail" aria-label="<?php echo esc_attr__('Design tools', 'sanro-design-maker'); ?>">
           <button type="button" data-action="add-text"><span aria-hidden="true">T</span>Text</button>
           <button type="button" data-action="upload"><span aria-hidden="true">▧</span>Image</button>
+          <button type="button" data-action="assets"><span aria-hidden="true">⌕</span>Assets</button>
           <button type="button" data-action="add-shape"><span aria-hidden="true">◇</span>Shapes</button>
           <button type="button" data-action="duplicate"><span aria-hidden="true">▢</span>Duplicate</button>
           <button type="button" data-action="delete"><span aria-hidden="true">⌫</span>Delete</button>
@@ -79,6 +91,8 @@ function sanro_dm_render_editor() {
           <label>Garis <input type="color" data-prop="stroke" value="#000000"></label>
           <label>Ketebalan garis <input type="range" min="0" max="24" value="0" data-prop="strokeWidth"></label>
           <label>Opasitas <input type="range" min="10" max="100" value="100" data-prop="opacity"></label>
+          <label>Font <select data-font-family><option value="Arial">Arial</option><option value="Anton">Anton</option><?php foreach ((array) get_option('sanro_dm_fonts', array()) as $font) { if (!empty($font['family']) && $font['family'] !== 'Anton') { ?><option value="<?php echo esc_attr($font['family']); ?>"><?php echo esc_html($font['family']); ?></option><?php } } ?></select></label>
+          <button type="button" data-action="remove-background">Hapus latar warna rata</button>
           <div class="sanro-dm__property-actions">
             <button type="button" data-action="align-left">Rata kiri</button><button type="button" data-action="align-center">Tengah</button>
             <button type="button" data-action="align-right">Rata kanan</button><button type="button" data-action="shadow">Bayangan</button>
@@ -92,18 +106,11 @@ function sanro_dm_render_editor() {
       </div>
       <footer class="sanro-dm__mobile-tools" aria-label="Design tools">
         <button type="button" data-action="add-text">Text</button><button type="button" data-action="upload">Image</button>
-        <button type="button" data-action="add-shape">Shapes</button><button type="button" data-action="templates">Templates</button><button type="button" data-action="layers">Layers</button>
+        <button type="button" data-action="add-shape">Shapes</button><button type="button" data-action="templates">Templates</button><button type="button" data-action="assets">Assets</button><button type="button" data-action="layers">Layers</button>
       </footer>
       <a class="sanro-dm__mobile-print" href="<?php echo esc_url(home_url('/custom/')); ?>">CETAK DESAIN INI</a>
       <div class="sanro-dm__notice" data-notice role="status" aria-live="polite"></div>
     </main>
     <?php
     return ob_get_clean();
-}
-function sanro_dm_admin_menu() {
-    add_menu_page('SANRO Design Maker', 'SANRO Design Maker', 'manage_options', 'sanro-design-maker', 'sanro_dm_admin_page', 'dashicons-art');
-}
-function sanro_dm_admin_page() {
-    if (!current_user_can('manage_options')) { return; }
-    echo '<div class="wrap"><h1>SANRO Design Maker</h1><p>' . esc_html__('Core editor preview. Asset providers, accounts, storage and Studio bridge are not connected yet.', 'sanro-design-maker') . '</p></div>';
 }

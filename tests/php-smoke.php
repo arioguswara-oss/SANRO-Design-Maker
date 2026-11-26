@@ -10,6 +10,11 @@ function wp_register_script(...$args) { $GLOBALS['scripts'][] = $args; }
 function wp_enqueue_style($handle) { $GLOBALS['enqueued'][] = $handle; }
 function wp_enqueue_script($handle) { $GLOBALS['enqueued'][] = $handle; }
 function wp_localize_script(...$args) { $GLOBALS['localized'][] = $args; }
+function get_option($name, $default = false) { return $default; }
+function sanitize_text_field($value) { return trim(strip_tags((string) $value)); }
+function wp_add_inline_style(...$args) {}
+function wp_upload_dir() { return array('basedir'=>'/tmp/uploads','baseurl'=>'https://example.test/uploads'); }
+function trailingslashit($value) { return rtrim($value, '/') . '/'; }
 function register_activation_hook(...$args) {} function register_deactivation_hook(...$args) {}
 function rest_url($path = '') { return 'https://example.test/wp-json/' . $path; }
 function esc_url_raw($value) { return $value; } function is_user_logged_in() { return false; }

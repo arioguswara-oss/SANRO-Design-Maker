@@ -1,38 +1,42 @@
 # SANRO Design Maker V1 checkpoint
 
 - Integration branch: `develop`.
-- Last source SHA: `9ff26d96a963d10e69bae28319f7db22f104af42` (implementation commit on `develop`; checkpoint documentation follows).
-- Verified progress: 0.5% overall; weighted score unchanged because this cycle's new account/storage behavior has syntax and editor-shell evidence only, not WordPress/browser runtime verification.
-- Workspace: isolated source copy at `/home/sanro/projects/sanro-design-maker-exec`; this directory is not a Git checkout. Changes were published to `develop` through GitHub MCP after local checks; branch head also includes checkpoint-only commits.
+- Last source SHA: to be filled after the current GitHub MCP code commit.
+- Verified progress: 0.5% overall (unchanged). New feature code has focused unit evidence but no real WordPress/browser runtime evidence.
+- Workspace: isolated source copy at `/home/sanro/projects/sanro-design-maker-exec`, not a Git checkout. Changes are published to `develop` through GitHub MCP with an expected-head check.
 
 ## Implemented
 
-- Existing editor foundation and six editable starter templates; Fabric.js 7.4.0 MIT bundled locally.
-- Logged-in REST-backed My Designs: save/update, list, reopen/edit, duplicate and delete. Login redirect leaves guest IndexedDB draft recoverable; saving after login associates it with the WordPress account.
-- REST upload accepts only uploaded PNG/JPEG/WebP, checks file MIME and image dimensions, enforces 8 MiB upload, 32 megapixel limit, per-account 64 MiB/100-asset quota and per-hour upload rate limit.
-- Asset and design records are scoped by current WordPress user. Stored assets are UUID-named with restrictive permissions in a directory that must resolve outside both WordPress root and document root; storage fails closed otherwise.
-- Saved design JSON is size/object bounded and rejects inline data URLs or image references that are not private assets owned by the current account. Account-authenticated asset reads stream privately with no-store headers.
-- Daily GC removes only unreferenced private assets older than 180 days. Existing user designs are not age-deleted.
+- Existing guest-first Fabric editor, six editable starter templates and IndexedDB recovery.
+- WordPress-native Admin sections: Dashboard, Assets, Templates, Fonts, Provider API, Watermark, Storage & Quota, Studio Bridge and Diagnostics. Data-changing admin actions check capability and nonce.
+- Openverse official API search filters commercial use and whitelists CC0/PDM/CC BY/CC BY-SA. Results require safe HTTPS links; image proxy accepts only a cached official result ID, screens DNS/IP, blocks redirects, validates image MIME/dimensions, limits response size, and retains attribution/source/license.
+- Bundled local Anton TrueType font with OFL 1.1. Admin can upload/delete additional approved Google Fonts WOFF2 files. Local faces use `font-display: swap` and load when selected.
+- Free on-device flat-color edge background removal (8 MP cap). No paid/AI service.
+- 480 × 480 JPEG preview with configurable watermark; no transparent HD download.
+- Owner-only share creation/list/revocation. Tokens are stored hashed, links expire in 7 days, shared designs are read-only, and share asset routes require an active token and an asset reference in that design.
+- Owner-only server generation of 4000 × 4000 resolution-independent SVG masters. Masters and source assets are stored outside webroot with restricted permissions; only metadata/hash is returned and no public master download route exists.
 
 ## Evidence
 
-- PHP syntax checks: PASS for plugin entrypoint, bootstrap and storage module.
-- `php tests/php-smoke.php`: PASS for shortcode/editor shell, local assets, shape/template mount and print CTA.
-- `php tests/storage-contract.php`: PASS for ownership/private-reference validation boundaries; this is a focused unit test, not WordPress REST integration evidence.
-- `node --check` for editor JS and browser smoke script: PASS.
-- Browser UI test: NOT TESTED. No alternate browser runner/desktop tool is exposed in this session and local Playwright package is absent. The prior Chromium crash method was not repeated.
-- WordPress route/database/private filesystem/account lifecycle integration tests: NOT TESTED.
-- Staging and SANRO Studio unchanged. No installation, deployment or production changes.
+- PHP lint: PASS for all plugin and test PHP files.
+- `php tests/php-smoke.php`: PASS.
+- `php tests/storage-contract.php`: PASS.
+- `php tests/provider-contract.php`: PASS.
+- `php tests/render-contract.php`: PASS.
+- `node --check` for editor/background JS: PASS.
+- `node tests/remove-background.test.cjs`: PASS (3 tests).
+- Browser, WordPress REST/admin/storage, Openverse live search and raster output: NOT TESTED. Previously unavailable runners were not retried.
 
 ## Known issues and next tasks
 
-- Exercise authenticated REST routes and storage permission behavior in a local WordPress runtime (focused serializer validation test exists; full integration remains NOT TESTED); specifically verify uploads, cross-account denial, CRUD, quotas and GC.
-- Run browser tests on desktop/mobile with Fabric image upload and guest draft recovery after login.
-- Verify response/error UX, My Designs UI and private image rehydration in browser.
-- Continue independent Asset/Template and Admin functions, then complete Studio contract integration only after read-only endpoint evidence.
-- Build installer, checksum and release metadata only after an installable candidate is ready.
+- Run independent WordPress/browser QA after Owner-authorized staging handoff.
+- Implement/test PNG raster production output when a supported server raster engine is available; current server master is SVG only.
+- Studio source requires product ID, `front`/`back` geometry and a Studio-authorized private master reference. The Maker's single canvas/SVG master has no proven mapping; do not send guessed requests or change SANRO Studio.
+- Only Anton is bundled. More Google Font binaries can be added from their official repository with licenses.
+- Build an installable ZIP labeled TESTING after source commit, run ZIP/security minimum checks, upload privately to SANRO Design Maker/Releases and add checksum/release notes.
+- Continue remaining independent V1 work; no installer or feature is FINAL RELEASE.
 
 ## Authorization
 
-Authorized: isolated development, local tests, commits to `develop`, private Drive delivery when candidate ready, read-only staging/Studio inspection.
+Authorized: isolated development, focused local tests, commits to `develop`, private Drive delivery, read-only Studio/staging inspection.
 Not authorized: merge to `main`, staging install/change, deployment, production writes, Studio edits, credential access, paid services, Rclone, Hermes or global VPS changes.

@@ -21,7 +21,14 @@
     const templateList = root.querySelector('[data-template-list]');
     const shapePanel = root.querySelector('[data-shape-panel]');
     const myDesigns = root.querySelector('[data-my-designs]');
+    const assetPanel = root.querySelector('[data-asset-panel]');
+    const assetQuery = root.querySelector('[data-asset-query]');
+    const assetResults = root.querySelector('[data-asset-results]');
     let currentDesignId = '';
+    const customTemplates = new Map();
+    const shareToken = new URLSearchParams(window.location.search).get('share') || new URLSearchParams(window.location.hash.slice(1)).get('share');
+    const sharedView = Boolean(shareToken && /^[a-f0-9]{64}$/i.test(shareToken));
+    if(sharedView){const clean=new URL(window.location.href);clean.searchParams.delete('share');clean.hash='';window.history.replaceState({},'',clean.toString());}
     const canvas = new fabric.Canvas(element, {
       width: 1000, height: 1000, backgroundColor: 'rgba(0,0,0,0)',
       preserveObjectStacking: true, selection: true, stopContextMenu: true,
@@ -91,10 +98,11 @@
       opts.headers = Object.assign({ 'X-WP-Nonce': window.SANRO_DM_API.nonce }, opts.headers);
       return fetch(window.SANRO_DM_API.root + path, opts).then(response => response.ok ? response : response.json().then(error => { throw new Error(error.message || 'Permintaan gagal.'); }));
     }
-    async function hydrateImages(json) {
+    async function hydrateImages(json, token) {
       for (const object of (json.objects || [])) {
         if (!object.data || !object.data.assetId) continue;
-        const response = await api('assets/' + encodeURIComponent(object.data.assetId));
+        const response = token ? await fetch(window.SANRO_DM_API.root+'shares/'+encodeURIComponent(token)+'/assets/'+encodeURIComponent(object.data.assetId),{credentials:'same-origin'}) : await api('assets/' + encodeURIComponent(object.data.assetId));
+        if(!response.ok)throw new Error('Aset desain tidak dapat diakses.');
         const blob = await response.blob(); object.src = URL.createObjectURL(blob);
       }
       return json;
@@ -108,6 +116,8 @@
         if (!assetId) {
           const blob = await fetch(object.getSrc()).then(response => response.blob());
           const form = new FormData(); form.append('file', blob, 'design-image');
+          const provenance = object.data && object.data.provenance;
+          if (provenance) { form.append('provider_id',provenance.provider_id||'');form.append('source_url', provenance.source_url || ''); form.append('attribution', provenance.attribution || ''); form.append('license', provenance.license || ''); form.append('license_url', provenance.license_url || ''); }
           const uploaded = await api('assets', { method: 'POST', body: form }).then(response => response.json());
           assetId = uploaded.id; object.data = Object.assign({}, object.data, { assetId });
         }
@@ -116,6 +126,7 @@
       return JSON.stringify(design);
     }
     async function saveDesign() {
+      if(sharedView)return;
       if (!window.SANRO_DM_API || !window.SANRO_DM_API.loggedIn) { window.location.href = window.SANRO_DM_API ? window.SANRO_DM_API.loginUrl : '/wp-login.php'; return; }
       status.textContent = 'Menyimpan desain…';
       try {
@@ -142,9 +153,58 @@
           duplicateButton.addEventListener('click', async () => { const data = await api('designs/' + encodeURIComponent(item.id)).then(r => r.json()); await api('designs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({title: item.title + ' salinan', design: JSON.stringify(data.design)}) }); inform('Desain diduplikasi.'); listDesigns(true); });
           const del = document.createElement('button'); del.type = 'button'; del.textContent = 'Hapus';
           del.addEventListener('click', async () => { await api('designs/' + encodeURIComponent(item.id), { method: 'DELETE' }); if (currentDesignId === item.id) currentDesignId = ''; inform('Desain dihapus.'); listDesigns(true); });
-          row.append(title, open, duplicateButton, del); myDesigns.append(row);
+          const revokeShare=async(shareId,controls)=>{await api('shares/'+encodeURIComponent(shareId),{method:'DELETE'});controls.remove();inform('Tautan berbagi dicabut.');};
+          api('designs/'+encodeURIComponent(item.id)+'/shares').then(r=>r.json()).then(active=>active.forEach(s=>{const controls=document.createElement('span');controls.className='sanro-dm__share-controls';controls.textContent='Tautan aktif hingga '+s.expires_at+' ';const revoke=document.createElement('button');revoke.type='button';revoke.textContent='Cabut';revoke.addEventListener('click',()=>revokeShare(s.id,controls));controls.append(revoke);row.append(controls);})).catch(()=>{});
+          const share=document.createElement('button');share.type='button';share.textContent='Bagikan';
+          share.addEventListener('click',async()=>{const result=await api('designs/'+encodeURIComponent(item.id)+'/shares',{method:'POST'}).then(r=>r.json());row.querySelectorAll('.sanro-dm__share-controls').forEach(node=>node.remove());const controls=document.createElement('span');controls.className='sanro-dm__share-controls';const link=document.createElement('a');link.href=result.url;link.textContent='Buka tautan berbagi (7 hari)';link.target='_blank';link.rel='noopener noreferrer';const revoke=document.createElement('button');revoke.type='button';revoke.textContent='Cabut';revoke.addEventListener('click',()=>revokeShare(result.id,controls));controls.append(link,revoke);row.append(controls);});
+          const render=document.createElement('button');render.type='button';render.textContent='Master privat';render.addEventListener('click',async()=>{try{const result=await api('designs/'+encodeURIComponent(item.id)+'/render',{method:'POST'}).then(r=>r.json());inform('Master vektor SVG disimpan privat. SHA256 '+result.sha256.slice(0,12)+'…');}catch(error){inform(error.message);}});
+          row.append(title, open, duplicateButton, del, share, render); myDesigns.append(row);
         });
       } catch (error) { myDesigns.textContent = error.message; }
+    }
+    async function searchAssets() {
+      const query = assetQuery.value.trim(); if (query.length < 2) return inform('Masukkan minimal dua karakter untuk mencari aset.');
+      assetResults.textContent = 'Mencari aset berlisensi…';
+      try {
+        const response = await fetch(window.SANRO_DM_API.root + 'providers/openverse?q=' + encodeURIComponent(query), { credentials: 'same-origin' });
+        if (!response.ok) throw new Error('Pencarian aset tidak tersedia.');
+        const items = await response.json(); assetResults.replaceChildren();
+        if (!items.length) { assetResults.textContent = 'Tidak ada aset dengan lisensi komersial yang memenuhi syarat.'; return; }
+        items.forEach(item => {
+          const card=document.createElement('article');card.className='sanro-dm__asset-result';
+          const title=document.createElement('strong');title.textContent=item.title||'Asset Openverse';
+          const detail=document.createElement('small');detail.textContent=[item.creator,item.license.toUpperCase(),item.attribution].filter(Boolean).join(' · ');
+          const add=document.createElement('button');add.type='button';add.textContent='Tambahkan';
+          add.addEventListener('click',()=>addProviderAsset(item).catch(error=>inform(error.message)));
+          card.append(title,detail,add);assetResults.append(card);
+        });
+      } catch (error) { assetResults.textContent=error.message; }
+    }
+    async function addProviderAsset(item) {
+      const endpoint=window.SANRO_DM_API.root+'providers/media?id='+encodeURIComponent(item.id);
+      const response=await fetch(endpoint,{credentials:'same-origin'});if(!response.ok)throw new Error('Aset tidak bisa diambil secara aman.');
+      const blob=await response.blob();
+      const imageURL=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});
+      const image=await fabric.Image.fromURL(imageURL);
+      const scale=Math.min(420/image.width,420/image.height,1);
+      image.set({left:290,top:290,scaleX:scale,scaleY:scale,name:item.title||'Openverse asset',data:{provenance:{provider_id:item.id,source_url:item.source_url,attribution:item.attribution||'',license:item.license,license_url:item.license_url}}});
+      canvas.add(image);canvas.setActiveObject(image);canvas.requestRenderAll();renderLayers();snapshot();
+      inform('Aset ditambahkan. Atribusi dan lisensi disimpan bersama aset saat desain disimpan.');
+    }
+    async function removeFlatBackground() {
+      const object=selected();if(!object||String(object.type).toLowerCase()!=='image')return inform('Pilih gambar untuk menghapus latar.');
+      const source=object.getElement();const width=source.naturalWidth||source.width;const height=source.naturalHeight||source.height;
+      if(!width||!height||width*height>8000000)return inform('Gambar harus berukuran maksimal 8 megapiksel untuk proses gratis ini.');
+      const work=document.createElement('canvas');work.width=width;work.height=height;const ctx=work.getContext('2d',{willReadFrequently:true});
+      let frame;try { ctx.drawImage(source,0,0,width,height);frame=ctx.getImageData(0,0,width,height); } catch (_) { return inform('Gambar ini tidak dapat diproses di perangkat.'); }
+      if(!window.SanroRemoveFlatBackground||!window.SanroRemoveFlatBackground(frame.data,width,height))return inform('Tidak ditemukan latar buram untuk dihapus.');
+      ctx.putImageData(frame,0,0);const index=canvas.getObjects().indexOf(object);const replacement=await fabric.Image.fromURL(work.toDataURL('image/png'));
+      const replacementData=Object.assign({},object.data||{});delete replacementData.assetId;
+      replacement.set({left:object.left,top:object.top,scaleX:object.scaleX,scaleY:object.scaleY,angle:object.angle,flipX:object.flipX,flipY:object.flipY,opacity:object.opacity,originX:object.originX,originY:object.originY,name:object.name,data:replacementData});
+      canvas.remove(object);canvas.insertAt(index,replacement);canvas.setActiveObject(replacement);canvas.requestRenderAll();renderLayers();snapshot();inform('Latar warna rata dihapus di perangkat ini. Periksa tepi gambar sebelum menyimpan.');
+    }
+    function downloadPreview() {
+      try {const design=canvas.toCanvasElement({multiplier:.4});const preview=document.createElement('canvas');preview.width=480;preview.height=480;const ctx=preview.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,480,480);ctx.drawImage(design,40,40,400,400);ctx.save();ctx.translate(240,240);ctx.rotate(-Math.PI/5);ctx.fillStyle='rgba(24,28,33,.36)';ctx.font='700 22px system-ui,sans-serif';ctx.textAlign='center';const label=(window.SANRO_DM_API&&window.SANRO_DM_API.watermark)||'kaoscetak.id';for(let y=-360;y<=360;y+=110)for(let x=-360;x<=360;x+=220)ctx.fillText(label,x,y);ctx.restore();const link=document.createElement('a');link.download='SANRO-preview-480px-watermarked.jpg';link.href=preview.toDataURL('image/jpeg',.78);link.click();inform('Preview JPEG 480 × 480 dengan watermark diunduh.');}catch(_){inform('Preview tidak dapat dibuat.');}
     }
     function loadJSON(json) {
       return restoreJSON(json).then(snapshot);
@@ -200,6 +260,7 @@
     }
     function addTemplate(id) {
       if (canvas.getObjects().length && !window.confirm('Tambahkan template editable ke desain saat ini?')) return;
+      if(customTemplates.has(id)){const entry=customTemplates.get(id);loadJSON(JSON.stringify(entry.design)).then(()=>inform('Template tersimpan dimuat sebagai desain editable.'));templatePanel.hidden=true;return;}
       const items = [];
       if (id === 'vintage') {
         items.push(new fabric.Circle({ left: 180, top: 130, radius: 320, fill: 'rgba(0,0,0,0)', stroke: '#a64d2f', strokeWidth: 16, name: 'Cincin vintage' }));
@@ -248,6 +309,7 @@
         const detail=document.createElement('span'); detail.textContent=description;
         button.append(name,detail); templateList.append(button);
       });
+      fetch(window.SANRO_DM_API.root+'templates',{credentials:'same-origin'}).then(r=>r.ok?r.json():[]).then(items=>items.forEach(entry=>{if(!entry||!entry.id||!entry.design)return;customTemplates.set(entry.id,entry);const button=document.createElement('button');button.type='button';button.className='sanro-dm__template-card';button.dataset.templateId=entry.id;const name=document.createElement('strong');name.textContent=entry.title;const detail=document.createElement('span');detail.textContent='Template SANRO · editable';button.append(name,detail);templateList.append(button);})).catch(()=>{});
     }
     function duplicate() {
       const object = selected(); if (!object) return inform('Pilih objek untuk diduplikasi.');
@@ -286,9 +348,13 @@
       const action = button.dataset.action;
       if (action === 'undo') undo();
       else if (action === 'redo') redo();
+      else if (action === 'download-preview') downloadPreview();
       else if (action === 'add-text') addText();
       else if (action === 'add-shape') { shapePanel.hidden=!shapePanel.hidden; templatePanel.hidden=true; }
       else if (action === 'upload') fileInput.click();
+      else if (action === 'assets') { assetPanel.hidden=!assetPanel.hidden;shapePanel.hidden=true;templatePanel.hidden=true; }
+      else if (action === 'asset-search') searchAssets();
+      else if (action === 'remove-background') removeFlatBackground();
       else if (action === 'duplicate') duplicate();
       else if (action === 'delete') remove();
       else if (action === 'layers') showProperties();
@@ -304,12 +370,15 @@
     root.querySelectorAll('[data-prop]').forEach(input => {
       input.addEventListener('input', () => updateProperty(input.dataset.prop, input.value));
     });
+    const fontSelect=root.querySelector('[data-font-family]');fontSelect.addEventListener('change',()=>{const object=selected();if(!object||!object.set||!('fontFamily'in object))return inform('Pilih objek teks terlebih dahulu.');object.set('fontFamily',fontSelect.value);document.fonts.load('16px "'+fontSelect.value+'"').finally(()=>{canvas.requestRenderAll();snapshot();});});
+    assetQuery.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchAssets();}});
     fileInput.addEventListener('change', () => { upload(fileInput.files[0]); fileInput.value = ''; });
     canvas.on('object:added', () => { renderLayers(); window.clearTimeout(historyTimer); historyTimer = window.setTimeout(snapshot, 120); });
     canvas.on('object:modified', () => { renderLayers(); snapshot(); });
     canvas.on('object:removed', () => { renderLayers(); snapshot(); });
     canvas.on('selection:created', renderLayers); canvas.on('selection:updated', renderLayers); canvas.on('selection:cleared', renderLayers);
     root.addEventListener('keydown', event => {
+      if(sharedView)return;
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo(); }
       if ((event.key === 'Delete' || event.key === 'Backspace') && !event.target.closest('input,textarea,[contenteditable=true]')) remove();
     });
@@ -330,7 +399,10 @@
     stage.addEventListener('touchend', event => { for (const touch of event.changedTouches) touches.delete(touch.identifier); if (touches.size < 2) lastDistance = 0; }, { passive: true });
     function distance(points) { return Math.hypot(points[0].clientX - points[1].clientX, points[0].clientY - points[1].clientY); }
     canvas.setDimensions({ width: 1000, height: 1000 });
-    readDraft().then(draft => {
+    if(sharedView){
+      root.classList.add('is-shared-view');
+      fetch(window.SANRO_DM_API.root+'shares/'+encodeURIComponent(shareToken),{credentials:'same-origin'}).then(response=>{if(!response.ok)throw new Error('Tautan sudah kedaluwarsa atau dicabut.');return response.json();}).then(async payload=>{const json=await hydrateImages(payload.design,shareToken);restoring=true;await canvas.loadFromJSON(json);canvas.getObjects().forEach(object=>object.set({selectable:false,evented:false}));canvas.selection=false;canvas.requestRenderAll();renderLayers();restoring=false;inform('Tampilan desain bersama (read-only).');}).catch(error=>inform(error.message));
+    } else readDraft().then(draft => {
       if (!draft || !draft.json || draft.version !== 1) { snapshot(); return; }
       if (window.confirm('Lanjutkan draft SANRO Design Maker yang tersimpan di perangkat ini?')) loadJSON(draft.json);
       else snapshot();

@@ -1,0 +1,14 @@
+<?php
+define('ABSPATH','/tmp/wp/');define('MB_IN_BYTES',1048576);
+class WP_Error { public $code;function __construct($code){$this->code=$code;} }
+class Fake_Render_DB {public $prefix='wp_';function prepare($sql,...$args){return $sql;}function get_row($sql){return null;}}
+function sanitize_text_field($v){return trim(strip_tags((string)$v));}function is_wp_error($v){return $v instanceof WP_Error;}function get_option($k,$d=false){return $d;}function wp_upload_dir(){return array('basedir'=>'/tmp/uploads','baseurl'=>'https://site.test/uploads');}function trailingslashit($v){return rtrim($v,'/').'/';}
+function expect_render($ok,$message){if(!$ok)throw new RuntimeException($message);}
+require __DIR__.'/../sanro-design-maker/includes/storage.php';require __DIR__.'/../sanro-design-maker/includes/admin.php';require __DIR__.'/../sanro-design-maker/includes/render.php';$wpdb=new Fake_Render_DB();
+$design=array('objects'=>array(array('type'=>'rect','left'=>25,'top'=>40,'width'=>300,'height'=>160,'fill'=>'#e65a33','stroke'=>'#20242a','strokeWidth'=>4,'scaleX'=>1,'scaleY'=>1,'opacity'=>1),array('type'=>'i-text','left'=>100,'top'=>250,'width'=>700,'height'=>100,'fontSize'=>64,'fontFamily'=>'Arial','text'=>'<script>alert("x")</script>','fill'=>'#222222','stroke'=>'none','strokeWidth'=>0,'scaleX'=>1,'scaleY'=>1,'opacity'=>1)));
+$svg=sanro_dm_design_to_svg($design,7);expect_render(is_string($svg),'safe vector/text design should render');expect_render(strpos($svg,'&lt;script&gt;')!==false&&strpos($svg,'<script>')===false,'SVG text must be XML escaped');expect_render(strpos($svg,'width="4000"')!==false,'private scalable SVG master should declare output dimensions');
+$fontDesign=array('objects'=>array(array('type'=>'i-text','left'=>0,'top'=>0,'width'=>300,'height'=>80,'fontSize'=>60,'fontFamily'=>'Anton','text'=>'SANRO','fill'=>'#000000','stroke'=>'none')));$fontSvg=sanro_dm_design_to_svg($fontDesign,7);expect_render(strpos($fontSvg,'data:font/ttf;base64,')!==false,'bundled local Google Font should be embedded in private SVG master');
+$badColor=array('objects'=>array(array('type'=>'rect','width'=>10,'height'=>10,'fill'=>'url(https://evil.test/x)','stroke'=>'none')));expect_render(is_wp_error(sanro_dm_design_to_svg($badColor,7)),'external SVG paint values must be rejected');
+$badType=array('objects'=>array(array('type'=>'path','path'=>'M0 0')));expect_render(is_wp_error(sanro_dm_design_to_svg($badType,7)),'unsupported vector types must be rejected');
+$publicImage=array('objects'=>array(array('type'=>'image','width'=>10,'height'=>10,'fill'=>'none','stroke'=>'none','data'=>array())));expect_render(is_wp_error(sanro_dm_design_to_svg($publicImage,7)),'unreferenced image bytes must be rejected');
+echo "Render contract PASS: SVG escaping, dimension metadata, paint/type allowlist and private asset reference\n";
