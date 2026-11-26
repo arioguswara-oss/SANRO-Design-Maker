@@ -1,19 +1,21 @@
 # SANRO Design Maker — Execution record
 
-Executor authority: Rio's SANRO DESIGN MAKER V1 MASTER EXECUTION MANDATE. Codex CLI develops on `develop`. This file is a cycle record, not a separate approval requirement.
+Executor authority: Rio's SANRO DESIGN MAKER V1 MASTER EXECUTION MANDATE. Codex CLI develops on `develop`. This is a progress record, not a separate approval requirement.
 
-## Cycle 1 — Core editor foundation
+## Cycle 1 — Core editor
 
-Started from foundation SHA `9b2b567b8b31210b2f9833f2740d5b27922e6f0f`. Added the responsive shortcode shell, Fabric.js 7.4.0 local MIT bundle, transparent canvas, raster/text/shape editing, transforms, basic properties, layers, history and IndexedDB guest draft recovery.
+Starting foundation SHA `9b2b567b8b31210b2f9833f2740d5b27922e6f0f` contained a shortcode placeholder and admin menu. Added responsive editor shell, local Fabric.js 7.4.0 MIT bundle, transparent canvas, text/shape/raster controls, transforms, properties, layers, history and IndexedDB draft recovery.
 
-PHP lint and shortcode smoke passed. Node syntax checks passed. Browser smoke could not execute because Chromium crashes in sandbox startup with crashpad `EPERM`.
+PHP lint and shortcode smoke passed; Node syntax checks passed. Browser smoke did not execute because Chromium startup failed with sandbox crashpad `EPERM`.
 
-## Cycle 2 — Original templates and Studio contract
+## Cycle 2 — Starter templates and Studio contract
 
-Added a responsive template picker with six original editable compositions: vintage, streetwear, adventure, cartoon, floral and typography. No external/proprietary assets are used. PHP lint/smoke and JavaScript syntax checks pass; the browser test now includes template selection but remains NOT TESTED because the same Chromium startup restriction persists.
+Added six original editable templates: vintage, streetwear, adventure, cartoon, floral and typography. Read-only Studio source inspection is recorded in `docs/STUDIO-CONTRACT-READONLY.md`. The source API is conditional and needs product-specific front/back schema, owner token, nonce and private image master refs. Deployed staging feature state remains unverified.
 
-Read-only source inspection found Studio draft routes in `docs/STUDIO-CONTRACT-READONLY.md`. The local Studio checkout is branch `work/hermes-studio-restore-20261123` at `9bd20d583c35db38b2120dc3c871bc8dda8b8d12`, not verified as the deployed staging revision. Staging plugin inventory returned `Transport closed`. No endpoint was called.
+## Cycle 3 — Shape picker
 
-Next cycle: get an allowed browser runtime; verify interactions and templates; continue private server storage/auth; verify actual staging Studio version and flags read-only; build the product/front/back adapter only after schema mapping is tested.
+Added editable rectangle, circle, triangle and line choices through a responsive shape picker. PHP lint/smoke and JavaScript syntax checks pass. Browser interaction test remains NOT TESTED due the same Chromium sandbox startup failure.
 
-Boundaries: commit only to `develop`; no main merge, staging install/change, deployment, Studio edits, production writes, credentials, paid services, Rclone, Hermes or global VPS changes.
+Next: secure browser execution; verify tools and mobile gestures; then implement private server storage/auth; verify staging plugin/feature flags read-only and adapt the Studio schema without editing Studio.
+
+Boundaries: `develop` only; no main merge, staging install/change, deployment, Studio edits, production writes, credentials, paid services, Rclone, Hermes or global VPS changes.
