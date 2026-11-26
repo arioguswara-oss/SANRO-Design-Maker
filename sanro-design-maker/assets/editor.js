@@ -17,6 +17,8 @@
     const notice = root.querySelector('[data-notice]');
     const fileInput = root.querySelector('[data-image-file]');
     const layers = root.querySelector('[data-layer-list]');
+    const templatePanel = root.querySelector('[data-template-panel]');
+    const templateList = root.querySelector('[data-template-list]');
     const canvas = new fabric.Canvas(element, {
       width: 1000, height: 1000, backgroundColor: 'rgba(0,0,0,0)',
       preserveObjectStacking: true, selection: true, stopContextMenu: true,
@@ -125,6 +127,60 @@
       const object = new fabric.Rect({ left: 340, top: 340, width: 260, height: 190, rx: 18, ry: 18, fill: '#e65a33', strokeWidth: 0, name: 'Bentuk' });
       canvas.add(object); canvas.setActiveObject(object); canvas.requestRenderAll(); renderLayers(); snapshot();
     }
+    function templateText(text, top, size, fill, options) {
+      return new fabric.Textbox(text, Object.assign({ left: 100, top, width: 800, fontSize: size, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', fill, name: 'Teks template' }, options || {}));
+    }
+    function addTemplate(id) {
+      if (canvas.getObjects().length && !window.confirm('Tambahkan template editable ke desain saat ini?')) return;
+      const items = [];
+      if (id === 'vintage') {
+        items.push(new fabric.Circle({ left: 180, top: 130, radius: 320, fill: 'rgba(0,0,0,0)', stroke: '#a64d2f', strokeWidth: 16, name: 'Cincin vintage' }));
+        items.push(new fabric.Circle({ left: 215, top: 165, radius: 285, fill: 'rgba(0,0,0,0)', stroke: '#d39a48', strokeWidth: 7, name: 'Garis vintage' }));
+        items.push(templateText('YOUR BRAND', 380, 96, '#542f25', { fontFamily: 'Georgia', charSpacing: 60 }));
+        items.push(templateText('ORIGINAL GOODS  •  EST. 2026', 510, 30, '#a64d2f', { fontFamily: 'Georgia', charSpacing: 90 }));
+      } else if (id === 'streetwear') {
+        items.push(new fabric.Rect({ left: 140, top: 200, width: 720, height: 590, fill: 'rgba(0,0,0,0)', stroke: '#1d2530', strokeWidth: 18, name: 'Bingkai streetwear' }));
+        items.push(templateText('MOVE\nLOUD', 330, 145, '#f04f35', { stroke: '#1d2530', strokeWidth: 3, lineHeight: .8, charSpacing: 30 }));
+        items.push(templateText('MAKE YOUR OWN WAY', 650, 32, '#1d2530', { charSpacing: 160 }));
+      } else if (id === 'adventure') {
+        items.push(new fabric.Circle({ left: 360, top: 145, radius: 140, fill: '#e7a542', name: 'Matahari adventure' }));
+        items.push(new fabric.Triangle({ left: 155, top: 330, width: 360, height: 330, fill: '#31565b', name: 'Gunung kiri' }));
+        items.push(new fabric.Triangle({ left: 420, top: 370, width: 390, height: 290, fill: '#527a68', name: 'Gunung kanan' }));
+        items.push(templateText('WILD & FREE', 710, 64, '#253b3c', { charSpacing: 100 }));
+        items.push(templateText('TAKE THE LONG WAY', 790, 27, '#527a68', { charSpacing: 140 }));
+      } else if (id === 'cartoon') {
+        items.push(new fabric.Circle({ left: 155, top: 190, radius: 145, fill: '#ffcb4b', stroke: '#273342', strokeWidth: 12, name: 'Lencana kartun' }));
+        items.push(new fabric.Triangle({ left: 650, top: 180, width: 180, height: 180, fill: '#6bc6bb', angle: 18, name: 'Bintang kartun' }));
+        items.push(new fabric.Circle({ left: 680, top: 600, radius: 90, fill: '#f28b76', name: 'Aksen kartun' }));
+        items.push(templateText('HAPPY\nDAYS!', 380, 112, '#ef6046', { stroke: '#293545', strokeWidth: 4, lineHeight: .82 }));
+      } else if (id === 'floral') {
+        [[500,205],[650,335],[615,520],[385,520],[350,335]].forEach((point,index) => items.push(new fabric.Circle({ left: point[0]-82, top: point[1]-82, radius: 82, fill: index%2 ? '#e7a68c' : '#8cac80', name: 'Kelopak bunga '+(index+1) })));
+        items.push(new fabric.Circle({ left: 435, top: 270, radius: 65, fill: '#efd28b', name: 'Pusat bunga' }));
+        items.push(templateText('BLOOM DAILY', 690, 56, '#435e4b', { fontFamily: 'Georgia', charSpacing: 90 }));
+      } else if (id === 'typography') {
+        items.push(templateText('MAKE', 200, 120, '#20242a', { charSpacing: 220 }));
+        items.push(templateText('IT YOURS', 370, 112, '#e65a33', { charSpacing: 120 }));
+        items.push(new fabric.Rect({ left: 260, top: 570, width: 480, height: 12, fill: '#20242a', name: 'Garis tipografi' }));
+        items.push(templateText('IDEAS LOOK GOOD ON YOU', 620, 34, '#20242a', { charSpacing: 100 }));
+      }
+      if (!items.length) return;
+      canvas.add(...items); canvas.setActiveObject(items[items.length-1]); canvas.requestRenderAll(); renderLayers(); snapshot();
+      templatePanel.hidden = true;
+      inform('Template ditambahkan sebagai objek editable.');
+    }
+    function renderTemplates() {
+      const entries = [
+        ['vintage','Vintage','Lencana dan tipografi retro'], ['streetwear','Streetwear','Huruf tebal dengan bingkai'],
+        ['adventure','Adventure','Gunung dan matahari'], ['cartoon','Kartun','Warna cerah dan lencana'],
+        ['floral','Floral','Motif bunga geometris'], ['typography','Tipografi','Komposisi teks editable']
+      ];
+      entries.forEach(([id,title,description]) => {
+        const button=document.createElement('button'); button.type='button'; button.className='sanro-dm__template-card'; button.dataset.templateId=id;
+        const name=document.createElement('strong'); name.textContent=title;
+        const detail=document.createElement('span'); detail.textContent=description;
+        button.append(name,detail); templateList.append(button);
+      });
+    }
     function duplicate() {
       const object = selected(); if (!object) return inform('Pilih objek untuk diduplikasi.');
       object.clone().then(copy => { copy.set({ left: (object.left || 0) + 24, top: (object.top || 0) + 24, name: (object.name || 'Objek') + ' salinan' }); canvas.add(copy); canvas.setActiveObject(copy); canvas.requestRenderAll(); renderLayers(); snapshot(); });
@@ -154,6 +210,8 @@
     }
     function showProperties() { root.classList.toggle('is-properties-open'); }
     root.addEventListener('click', event => {
+      const template = event.target.closest('[data-template-id]');
+      if (template && templateList.contains(template)) { addTemplate(template.dataset.templateId); return; }
       const button = event.target.closest('[data-action]'); if (!button) return;
       const action = button.dataset.action;
       if (action === 'undo') undo();
@@ -164,6 +222,8 @@
       else if (action === 'duplicate') duplicate();
       else if (action === 'delete') remove();
       else if (action === 'layers') showProperties();
+      else if (action === 'templates') templatePanel.hidden = !templatePanel.hidden;
+      else if (action === 'templates-close') templatePanel.hidden = true;
       else if (action === 'align-left') align('left');
       else if (action === 'align-center') align('center');
       else if (action === 'align-right') align('right');
@@ -205,6 +265,7 @@
       else snapshot();
     }).catch(() => snapshot());
     renderLayers();
+    renderTemplates();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready); else ready();
 }());
