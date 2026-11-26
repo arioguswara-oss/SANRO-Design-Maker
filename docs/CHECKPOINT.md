@@ -1,10 +1,18 @@
 # SANRO Design Maker V1 checkpoint
 
-- Integration branch: `develop`.
-- Last implemented source SHA: `45e2c4b264d598eb89ec1e33911a96b7cff1c2fa` (v0.2.4-dev desktop shell/Home navigation on `develop`; docs checkpoint follows separately).
-- Staging candidate under independent QA: `88491d4f2a4d90e88c3f14bc8e1ff12335a0c386` (0.2.0-dev). Owner supplied QA: ZIP checksum/integrity, WP install/activation and shortcode HTTP 200 PASS; Android image upload PASS; image drag/resize and responsive header FAIL.
-- Verified progress: 0.5% overall (unchanged). P0 regression tests cover coordinate math and source contracts, not real browser gestures.
-- Workspace: isolated source copy at `/home/sanro/projects/sanro-design-maker-exec`, not a Git checkout. Changes are published to `develop` through GitHub MCP with an expected-head check.
+- Integration branch `develop`. Source for v0.2.5-dev TESTING is `873dc1a1d1a443107dc737b00eae3ebe97b42e74`.
+- WordPress confirms v0.2.5-dev is active on [Hostinger staging](https://saddlebrown-peafowl-616656.hostingersite.com/design-maker/). Guest browser loaded v0.2.5-dev assets.
+- Private [TESTING installer](https://drive.google.com/file/d/1TpqqKxGKSYTlHvOoTFL5_oNpnhY-RtiY/view?usp=drivesdk) is 217,381 bytes. ZIP root, CRC and SHA256 read back from Drive passed. SHA256 `f3065f945e74301231eb541cfc291557f4d974ae8486903457f141d0c9ee7997`.
+- Overall verified progress is 0.5% → 0.5% (+0.0 percentage points). Responsive acceptance is verified within Core Editor. The ledger assigns the whole Core Editor 25% and has no separate responsive-layout subweight.
+
+## v0.2.5-dev staging acceptance
+
+- v0.2.4-dev runtime reproduced page overflow. At 390 CSS px the theme wrapper scrolled to 420 px, the editor measured 421 px, and Preview extended to x=413. At desktop 1366 CSS px the document scrolled to 1416 px. Fixed and translated panels also shared overlapping vertical bounds with the mobile actions.
+- The editor is mounted at the viewport root on the dedicated page. One grid owns the header, canvas area, print CTA and mobile toolbar. Context panels are closeable and scroll within the workspace. Desktop uses tools, square Fabric canvas, and properties/layers columns. Home waits for the IndexedDB transaction to commit. The Fabric rotation handle keeps a 36 CSS px offset across zoom levels and the 9 CSS px handles are preserved.
+- **PASS** on installed staging as guest in fresh Chromium contexts. Mobile layout at 360, 390, 412 CSS px and desktop three-column layout at 1280, 1366, 1440, 1920 CSS px. All target menus reachable. Document width equals viewport width. The mobile properties panel opens, scrolls when contents exceed its bounds, and closes while the print CTA and toolbar remain reachable. At 1363 CSS px Cloud Browser separately measured document width 1363 px and three desktop columns.
+- **PASS** on staging with synthetic PNG at 390 CSS px using Chromium touch emulation and 1440 CSS px using mouse. Upload, drag, resize, rotation, Home and draft recovery. Two-touch pinch zoom changed the rendered area on Chromium at 390 CSS px.
+- **PASS** PHP lint, PHP smoke/storage/provider/render contracts, JavaScript syntax, mobile interaction contract and background-removal tests. Screenshot evidence from staging at mobile 390 × 844 and desktop 1440 × 900 CSS px.
+- **NOT TESTED** on physical Android. **GO** for staging QA. **NO-GO** for Final Release, merge, or production deployment.
 
 ## Implemented
 
@@ -49,15 +57,12 @@
 
 ## Known issues and next tasks
 
-- Run independent WordPress/browser QA after Owner-authorized staging handoff.
 - Implement/test PNG raster production output when a supported server raster engine is available; current server master is SVG only.
 - Studio source requires product ID, `front`/`back` geometry and a Studio-authorized private master reference. The Maker's single canvas/SVG master has no proven mapping; do not send guessed requests or change SANRO Studio.
 - Only Anton is bundled. More Google Font binaries can be added from their official repository with licenses.
 - Superseded `0.2.0-dev` installer: 211,528 bytes, SHA256 `1f9cee487fbcadb69c09f667bdcafea3e3e9cd04d9114688c522467362506963`; replaced due independent QA P0 failures.
-- Request ChatGPT independent checksum and Owner-authorized QA of `0.2.4-dev`: mobile 360/390/412 and desktop 1280/1366/1440/1920 CSS px; confirm full viewport, hidden theme title, three-column editor, Home destination, unsaved prompt/draft recovery, and preserved interactions. Do not deploy from this workspace.
 - No installer or feature is FINAL RELEASE.
 
 ## Authorization
 
-Authorized: isolated development, focused local tests, commits to `develop`, private Drive delivery, read-only Studio/staging inspection.
-Not authorized: merge to `main`, staging install/change, deployment, production writes, Studio edits, credential access, paid services, Rclone, Hermes or global VPS changes.
+The Owner authorized commits to `develop`, private Drive delivery, and Design Maker installation, activation and synthetic guest QA on the named Hostinger staging site for this cycle. Merge, production, Studio changes, worker delegation and global VPS changes remain outside this mandate.

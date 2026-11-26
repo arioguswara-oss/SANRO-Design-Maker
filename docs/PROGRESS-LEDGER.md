@@ -1,6 +1,12 @@
 # Progress ledger — 2026-11-26
 
-Baseline: 0%. Previous verified progress: 0.5%. Current verified progress: 0.5% (delta 0 points). This cycle added local, focused evidence; Admin, account, provider, rendering and browser behavior still need WordPress/browser QA before weighted credit changes.
+Baseline 0%. Previous verified progress 0.5% → current 0.5% (+0.0 percentage points). The responsive acceptance gate is now verified. No subweight is defined for this gate within Core Editor.
+
+**v0.2.5-dev TESTING** is active and verified on [Hostinger staging](https://saddlebrown-peafowl-616656.hostingersite.com/design-maker/) from source `873dc1a1d1a443107dc737b00eae3ebe97b42e74` on `develop`. [Private installer](https://drive.google.com/file/d/1TpqqKxGKSYTlHvOoTFL5_oNpnhY-RtiY/view?usp=drivesdk), 217,381 bytes. Drive download matches local SHA256 `f3065f945e74301231eb541cfc291557f4d974ae8486903457f141d0c9ee7997`. ZIP root and CRC pass.
+
+On installed staging as guest, layout and reachability passed mobile widths 360/390/412 and desktop widths 1280/1366/1440/1920 CSS px. Synthetic image upload, drag, resize, rotation, Home and draft recovery passed at 390 CSS px with emulated touch and 1440 CSS px with a mouse. Two-touch pinch passed in Chromium emulation. Physical Android remains NOT TESTED. PHP lint/smoke/storage/provider/render, JS syntax, mobile interaction and background-removal tests passed. Screenshot evidence captured from live staging at 390 × 844 and 1440 × 900 CSS px. **GO** for staging QA. **NO-GO** for Final Release, merge, or production.
+
+## Earlier cycles
 
 P0 mobile editor cycle: candidate `0.2.0-dev` received owner-supplied independent staging results (install/activation/frontend HTTP 200/image upload PASS; image drag/resize/responsive header FAIL). The fix is IMPLEMENTED locally as version `0.2.1-dev`. Earlier staging results are not post-fix verification.
 
@@ -12,7 +18,7 @@ Owner reports v0.2.3-dev checksum independently verified and candidate active on
 
 | Stage | Weight | Verified within stage | Status |
 |---|---:|---:|---|
-| Core Editor | 25% | 2% | PARTIAL — shortcode, asset wiring and editor mount verified by PHP smoke; UI interactions NOT TESTED |
+| Core Editor | 25% | 2% | PARTIAL — shortcode and wiring verified by PHP smoke. Responsive shell, browser interactions and guest recovery VERIFIED on staging. Physical Android NOT TESTED |
 | Asset & Template | 20% | 0% | IMPLEMENTED — curated Openverse search/import, editable admin templates, bundled Anton; live API/template UI NOT TESTED |
 | Account & My Designs | 15% | 0% | IMPLEMENTED — owner-scoped CRUD, 7-day share/revoke, read-only share assets; WordPress REST runtime NOT TESTED |
 | Studio Bridge | 15% | 0% | BLOCKED — source contract requires product ID, front/back schema and owner-bound Studio master refs; Maker mapping/staging state NOT VERIFIED |
@@ -22,7 +28,7 @@ Owner reports v0.2.3-dev checksum independently verified and candidate active on
 
 Implemented source on `develop`: editor and templates; private image upload/CRUD; admin catalogue; Openverse import with commercial license allowlist and attribution; local Anton font plus licensed WOFF2 upload workflow; client-side flat-background removal; owner-revocable share links; watermarked low-resolution JPEG preview; owner-only scalable SVG master generation stored privately.
 
-Evidence:
+Historical evidence:
 - PHP lint for all plugin/test PHP files — PASS.
 - `php tests/php-smoke.php` — PASS for shortcode, asset wiring, canvas/templates/shapes and CTA.
 - `php tests/storage-contract.php` — PASS for private asset ownership references, data URL/remote rejection, object cap and share asset scoping.
@@ -42,4 +48,4 @@ Evidence:
 - TESTING installer `0.2.1-dev`, source `d38b3cdf876adbbb393a8f87c9e72393ee78f2bf`, uploaded privately to Releases: [ZIP](https://drive.google.com/file/d/1MzGMTIt_9NHF30p4SpHoogGXsMCWacwC/view?usp=drivesdk), [SHA256 manifest](https://drive.google.com/file/d/1CCMFMWdIIrEjH3g7zoX2aEKphLo0GjJO/view?usp=drivesdk), [release notes](https://docs.google.com/document/d/1s8hOgOPE3xKh0okzCsbd3VwWBvmVxUYq/edit?usp=drivesdk&ouid=102665342940633303649&rtpof=true&sd=true). Local SHA256 `0b273327a7f5c76b13c0c6aeff7e620c88b3a5d6858c1a2956f51c1fa2070692`. Drive confirms private, expected parent and byte size; remote SHA256 NOT VERIFIED.
 - No staging, production, SANRO Studio, Hermes or global configuration changes.
 
-Known gaps: P0 implementation awaits fresh browser/staging QA; no post-fix runtime evidence; no raster PNG/Imagick/GD renderer; Studio private master mapping and two-sided geometry remain unverified; other Google Font files are not bundled; background removal is flat-color only; final acceptance NOT TESTED. The next installer must be labeled TESTING and is not production-ready.
+Known gaps include physical Android QA, a raster PNG/Imagick/GD renderer, Studio private master mapping for private masters and two-sided geometry, broader local Google Fonts, and final acceptance. Background removal currently covers flat colors.
