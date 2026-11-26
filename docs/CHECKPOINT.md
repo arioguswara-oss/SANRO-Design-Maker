@@ -1,43 +1,37 @@
 # SANRO Design Maker V1 checkpoint
 
 - Integration branch: `develop`.
-- Last verified code/test source SHA: `9d87ac4e60e7f955cf6e3434d9bed28a7afe6c34` (code and smoke-test change; subsequent commit updates the plugin README).
-- Verified progress: 0.5% overall; Core Editor 2% of its 25% stage. Cycles 2–3 added templates/shapes, but no progress credit until browser verification.
+- Last source SHA: `b5a5b95714e445a9a01f940c9c272f471914bec1` (implementation commit on `develop`; checkpoint documentation follows).
+- Verified progress: 0.5% overall; weighted score unchanged because this cycle's new account/storage behavior has syntax and editor-shell evidence only, not WordPress/browser runtime verification.
+- Workspace: isolated source copy at `/home/sanro/projects/sanro-design-maker-exec`; this directory is not a Git checkout. Changes are being published as one GitHub MCP commit to `develop` after local checks.
 
 ## Implemented
 
-- Responsive WordPress shortcode shell with `/custom/` print CTA.
-- Local Fabric.js 7.4.0 MIT bundle, transparent 1000 × 1000 canvas.
-- Text, rectangle/circle/triangle/line shapes, PNG/JPEG/WebP upload capped at 1.5 MiB, transforms, editable layers, duplicate/delete, undo/redo, fill/stroke/opacity, alignment, shadow and pinch zoom.
-- Six original editable starter templates: vintage, streetwear, adventure, cartoon, floral and typography.
-- Guest-only IndexedDB draft recovery with schema version and 3 MiB serialized-state cap.
-- Read-only Studio source contract in `docs/STUDIO-CONTRACT-READONLY.md`.
+- Existing editor foundation and six editable starter templates; Fabric.js 7.4.0 MIT bundled locally.
+- Logged-in REST-backed My Designs: save/update, list, reopen/edit, duplicate and delete. Login redirect leaves guest IndexedDB draft recoverable; saving after login associates it with the WordPress account.
+- REST upload accepts only uploaded PNG/JPEG/WebP, checks file MIME and image dimensions, enforces 8 MiB upload, 32 megapixel limit, per-account 64 MiB/100-asset quota and per-hour upload rate limit.
+- Asset and design records are scoped by current WordPress user. Stored assets are UUID-named with restrictive permissions in a directory that must resolve outside both WordPress root and document root; storage fails closed otherwise.
+- Saved design JSON is size/object bounded and rejects inline data URLs or image references that are not private assets owned by the current account. Account-authenticated asset reads stream privately with no-store headers.
+- Daily GC removes only unreferenced private assets older than 180 days. Existing user designs are not age-deleted.
 
 ## Evidence
 
-- PHP lint for plugin, bootstrap and smoke harness: PASS.
-- `php tests/php-smoke.php`: PASS for shortcode, local assets, canvas/template/shape mount and print CTA under WordPress stubs.
-- `node --check` for editor JS, vendor Fabric bundle and browser smoke: PASS.
-- Browser interactions: NOT TESTED. Chromium crashes before page execution with sandbox crashpad `EPERM`; retry with crash-reporter flags also failed.
-- WordPress MCP staging plugin inventory: NOT VERIFIED (`Transport closed`). No Studio endpoint was called.
+- PHP syntax checks: PASS for plugin entrypoint, bootstrap and storage module.
+- `php tests/php-smoke.php`: PASS for shortcode/editor shell, local assets, shape/template mount and print CTA.
+- `node --check` for editor JS and browser smoke script: PASS.
+- Browser UI test: NOT TESTED. No alternate browser runner/desktop tool is exposed in this session and local Playwright package is absent. The prior Chromium crash method was not repeated.
+- WordPress route/database/private filesystem/account lifecycle integration tests: NOT TESTED.
+- Staging and SANRO Studio unchanged. No installation, deployment or production changes.
 
-## Known issues
+## Known issues and next tasks
 
-- Browser and real WordPress runtime tests are unavailable in current sandbox.
-- No permanent account save/claim, secure private server-side image storage, production rendering, asset provider API, local Google Fonts, background removal or admin asset catalog.
-- Studio routes are feature-flagged and expect product-specific front/back geometry; staging install/flags were not verified.
-- GitHub terminal clone could not resolve `github.com`; isolated source copy is `/home/sanro/projects/sanro-design-maker-exec`, and GitHub MCP commits were read back on `develop`.
-- No installer ZIP uploaded; staging and production are unchanged.
-
-## Next tasks
-
-1. Run browser smoke with an allowed Playwright/Chromium runner and fix runtime errors.
-2. Verify shape/template selection, object transforms, image upload and IndexedDB recovery on mobile/desktop.
-3. Check staging Studio version and feature flags read-only when MCP responds; map the product/front/back schema.
-4. Implement and test private image storage, upload validation, owner checks and quotas before permanent image saves.
-5. Implement guest-to-account save/claim and My Designs once storage/auth contracts exist.
+- Exercise authenticated REST routes and storage permission behavior in a local WordPress runtime; specifically verify uploads, cross-account denial, CRUD, quotas and GC.
+- Run browser tests on desktop/mobile with Fabric image upload and guest draft recovery after login.
+- Verify response/error UX, My Designs UI and private image rehydration in browser.
+- Continue independent Asset/Template and Admin functions, then complete Studio contract integration only after read-only endpoint evidence.
+- Build installer, checksum and release metadata only after an installable candidate is ready.
 
 ## Authorization
 
-Authorized: isolated development, local tests, `develop` commits, read-only Studio/staging checks, private Drive delivery when ready.
-Not authorized: `main` merge, staging install/change, deployment, production writes, Studio edits, credential access, paid services, Rclone, Hermes or global VPS changes.
+Authorized: isolated development, local tests, commits to `develop`, private Drive delivery when candidate ready, read-only staging/Studio inspection.
+Not authorized: merge to `main`, staging install/change, deployment, production writes, Studio edits, credential access, paid services, Rclone, Hermes or global VPS changes.
