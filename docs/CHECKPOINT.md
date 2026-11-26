@@ -1,43 +1,43 @@
 # SANRO Design Maker V1 checkpoint
 
-- Current integration branch: `develop`.
-- Last verified code and test source SHA: `43a7c0a40895ce7812bf39ddd5d97827b2f87866` (subsequent commits record vendor metadata, portable test loading and execution notes).
-- GitHub branch head before this checkpoint file: `98752a2496535ed113b3b87d140dae14489f0847`.
-- Verified functional progress: 0.5% overall; Core Editor 2% of its 25% stage. No staging or final acceptance credit.
+- Integration branch: `develop`.
+- Last verified code/test source SHA: `fd12bbb8b87105d76dd416af1f2d4bfdc3ed4150` (template panel/runtime additions and smoke test update; later commits are README/docs only).
+- Verified progress: 0.5% overall; Core Editor 2% of its 25% stage. Cycle 2 added templates but does not increase verified progress because browser execution failed.
 
 ## Implemented
 
-- WordPress shortcode shell with mobile/desktop layout and `/custom/` print CTA.
-- Locally bundled Fabric.js 7.4.0 (MIT, tag `v740`) and transparent 1000 × 1000 editor canvas.
-- Text and rectangle tools, PNG/JPEG/WebP file selection capped at 1.5 MiB, Fabric selection/transforms, layer selection, duplicate/delete, undo/redo, basic fill/stroke/opacity, alignment, shadow, pinch zoom and keyboard shortcuts.
-- Guest IndexedDB draft recovery with schema version and a 3 MiB serialized-state limit.
-- Test scripts, vendor license/version record, progress ledger and this resume checkpoint.
+- WordPress shortcode with responsive mobile/desktop shell and print CTA to `/custom/`.
+- Fabric.js 7.4.0 MIT bundle loaded locally; transparent 1000 × 1000 canvas.
+- Text, rectangle, PNG/JPEG/WebP upload capped at 1.5 MiB, Fabric transforms, editable layers, duplicate/delete, undo/redo, fill/stroke/opacity, alignment, shadow and pinch zoom.
+- Six original editable starter templates: vintage, streetwear, adventure, cartoon, floral and typography.
+- Guest-only IndexedDB draft recovery with schema version and 3 MiB serialized-state cap.
+- Read-only Studio contract notes in `docs/STUDIO-CONTRACT-READONLY.md`.
 
-## Test evidence
+## Evidence
 
-- PHP lint: PASS for plugin entrypoint and bootstrap.
-- `tests/php-smoke.php`: PASS for shortcode output, asset enqueue, canvas mount and print CTA in a WordPress stub harness.
-- `node --check`: PASS for editor JS, upstream Fabric bundle and browser smoke script.
-- Browser interactions: NOT TESTED. Chromium is installed but crashes before page execution with sandbox crashpad `EPERM`; retry with crash reporter flags failed the same way.
-- Full WordPress runtime, mobile object transforms, file upload/reopen, IndexedDB in real browser, security and accessibility: NOT TESTED.
+- PHP lint for plugin entrypoint, bootstrap and smoke script: PASS.
+- `php tests/php-smoke.php`: PASS for shortcode, local assets, template-picker mount, transparent canvas and print CTA in a WordPress stub harness.
+- `node --check` for editor JS, Fabric bundle and browser test: PASS.
+- Browser interactions: NOT TESTED. Chromium process fails before page execution with sandbox crashpad `EPERM`; a retry with crash reporter flags also failed.
+- WordPress MCP read-only plugin inventory: NOT VERIFIED (`Transport closed`). Prior page read returned HTTP 200, but installed Studio plugin and feature flags were not confirmed.
 
-## Known issues
+## Known gaps
 
-- Browser execution is blocked by the current sandbox runtime.
-- PHP and WordPress behavior has only been verified with a local stub harness, not a WordPress installation.
-- Permanent account saves, server-side upload validation/private asset storage, production rendering, asset/template/font providers, background removal and SANRO Studio handoff are not implemented.
-- The local source workspace is isolated at `/home/sanro/projects/sanro-design-maker-exec`; a terminal clone could not resolve `github.com`, so local tests used the synchronized workspace copy and commits were written through the authenticated GitHub MCP to `develop`.
+- No WordPress runtime or successful browser run.
+- No permanent My Designs/account workflow, private server-side image storage, production rendering, background removal, asset provider API, local Google Fonts or admin catalog.
+- Studio source contract requires product ID, product-specific front/back schema, nonce and owner token; staging enablement is not verified and no integration call was made.
+- Terminal GitHub clone failed DNS resolution. Local tests use `/home/sanro/projects/sanro-design-maker-exec`; GitHub MCP wrote and read back commits on `develop`.
+- No installer ZIP is ready or uploaded; no staging or production change.
 
 ## Next tasks (max 5)
 
-1. Run the existing browser smoke with an allowed Playwright/Chromium runner; resolve any runtime failures.
-2. Verify image handling, transform gestures, mobile pinch zoom and IndexedDB restore in browser.
-3. Inspect SANRO Studio integration contract read-only and document exact handoff requirements.
-4. Design and implement secure server-side asset storage, guest/owner authorization and quota endpoints.
-5. Continue asset/template catalog and account/guest claim flows after storage and identity contracts are established.
+1. Run browser smoke with an allowed Playwright/Chromium runner; self-fix runtime failures.
+2. Verify transforms, template application, image upload and IndexedDB restore on mobile and desktop.
+3. Inspect staging's installed SANRO Studio version and flags read-only when MCP responds; map actual product/front/back design schema.
+4. Implement and test private server-side image storage, upload validation, ownership and quota before permanent image saves.
+5. Add guest-to-account save/claim and My Designs CRUD after storage/auth contracts are ready.
 
 ## Authorization boundaries
 
-- Authorized: isolated development, local tests, commits on `develop`, read-only Studio/staging inspection, private Google Drive candidate delivery when ready.
-- Not authorized: merge to `main`, staging install or changes, deployment, production writes, SANRO Studio modifications, credential access, paid services, Rclone, Hermes/global VPS changes.
-- No installer candidate is ready; no artifact has been uploaded. Staging URL remains unmodified.
+Authorized: isolated development, local tests, commits on `develop`, read-only Studio/staging inspection and private Drive delivery when a candidate is ready.
+Not authorized: merge to `main`, staging install/change, deployment, production writes, Studio edits, credential access, paid services, Rclone, Hermes or global VPS changes.
