@@ -1,9 +1,9 @@
 # SANRO Design Maker V1 checkpoint
 
 - Integration branch: `develop`.
-- Last source SHA: `b5a5b95714e445a9a01f940c9c272f471914bec1` (implementation commit on `develop`; checkpoint documentation follows).
+- Last source SHA: `9ff26d96a963d10e69bae28319f7db22f104af42` (implementation commit on `develop`; checkpoint documentation follows).
 - Verified progress: 0.5% overall; weighted score unchanged because this cycle's new account/storage behavior has syntax and editor-shell evidence only, not WordPress/browser runtime verification.
-- Workspace: isolated source copy at `/home/sanro/projects/sanro-design-maker-exec`; this directory is not a Git checkout. Changes are being published as one GitHub MCP commit to `develop` after local checks.
+- Workspace: isolated source copy at `/home/sanro/projects/sanro-design-maker-exec`; this directory is not a Git checkout. Changes were published to `develop` through GitHub MCP after local checks; branch head also includes checkpoint-only commits.
 
 ## Implemented
 
@@ -18,6 +18,7 @@
 
 - PHP syntax checks: PASS for plugin entrypoint, bootstrap and storage module.
 - `php tests/php-smoke.php`: PASS for shortcode/editor shell, local assets, shape/template mount and print CTA.
+- `php tests/storage-contract.php`: PASS for ownership/private-reference validation boundaries; this is a focused unit test, not WordPress REST integration evidence.
 - `node --check` for editor JS and browser smoke script: PASS.
 - Browser UI test: NOT TESTED. No alternate browser runner/desktop tool is exposed in this session and local Playwright package is absent. The prior Chromium crash method was not repeated.
 - WordPress route/database/private filesystem/account lifecycle integration tests: NOT TESTED.
@@ -25,7 +26,7 @@
 
 ## Known issues and next tasks
 
-- Exercise authenticated REST routes and storage permission behavior in a local WordPress runtime; specifically verify uploads, cross-account denial, CRUD, quotas and GC.
+- Exercise authenticated REST routes and storage permission behavior in a local WordPress runtime (focused serializer validation test exists; full integration remains NOT TESTED); specifically verify uploads, cross-account denial, CRUD, quotas and GC.
 - Run browser tests on desktop/mobile with Fabric image upload and guest draft recovery after login.
 - Verify response/error UX, My Designs UI and private image rehydration in browser.
 - Continue independent Asset/Template and Admin functions, then complete Studio contract integration only after read-only endpoint evidence.
