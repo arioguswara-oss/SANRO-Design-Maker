@@ -22,7 +22,8 @@
   const rotate = object.controls.mtr;
   if (rotate) {
     rotate.visible = true;
-    rotate.offsetY = -36 / zoom;
+    // Fabric positions controls in viewport pixels, with the zoom removed.
+    rotate.offsetY = -36;
     rotate.withConnection = true;
     if (!rotate.__sanroIconRender) {
       const baseRender = rotate.render;

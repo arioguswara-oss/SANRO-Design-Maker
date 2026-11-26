@@ -6,7 +6,13 @@
   const DB_VERSION = 1;
 
   function ready() {
-    document.querySelectorAll(ROOT).forEach(boot);
+    const editors = document.querySelectorAll(ROOT);
+    if (editors.length === 1 && window.fabric?.Canvas && document.body.classList.contains('sanro-dm-fullscreen')) {
+      // Theme wrappers can enlarge the mobile layout viewport or contain fixed descendants.
+      document.body.append(editors[0]);
+      document.documentElement.classList.add('sanro-dm-viewport');
+    }
+    editors.forEach(boot);
   }
 
   function boot(root) {
@@ -25,6 +31,10 @@
     const assetPanel = root.querySelector('[data-asset-panel]');
     const assetQuery = root.querySelector('[data-asset-query]');
     const assetResults = root.querySelector('[data-asset-results]');
+    const properties = root.querySelector('[data-properties]');
+    const mobileLayers = root.querySelector('.sanro-dm__mobile-tools [data-action="layers"]');
+    const toolPanels = [templatePanel, shapePanel, assetPanel];
+    let panelTrigger = null;
     let currentDesignId = '';
     const customTemplates = new Map();
     const shareToken = new URLSearchParams(window.location.search).get('share') || new URLSearchParams(window.location.hash.slice(1)).get('share');
@@ -67,8 +77,8 @@
       return db().then(database => new Promise((resolve, reject) => {
         const tx = database.transaction('drafts', mode);
         const request = action(tx.objectStore('drafts'));
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        tx.oncomplete = () => resolve(request.result);
+        tx.onabort = () => reject(tx.error);
       }));
     }
     function readDraft() { return draftTransaction('readonly', store => store.get('guest')); }
@@ -269,7 +279,7 @@
     }
     function addTemplate(id) {
       if (canvas.getObjects().length && !window.confirm('Tambahkan template editable ke desain saat ini?')) return;
-      if(customTemplates.has(id)){const entry=customTemplates.get(id);loadJSON(JSON.stringify(entry.design)).then(()=>inform('Template tersimpan dimuat sebagai desain editable.'));templatePanel.hidden=true;return;}
+      if(customTemplates.has(id)){const entry=customTemplates.get(id);loadJSON(JSON.stringify(entry.design)).then(()=>inform('Template tersimpan dimuat sebagai desain editable.'));showPanel(null, null, true);return;}
       const items = [];
       if (id === 'vintage') {
         items.push(new fabric.Circle({ left: 180, top: 130, radius: 320, fill: 'rgba(0,0,0,0)', stroke: '#a64d2f', strokeWidth: 16, name: 'Cincin vintage' }));
@@ -303,7 +313,7 @@
       }
       if (!items.length) return;
       canvas.add(...items); canvas.setActiveObject(items[items.length-1]); canvas.requestRenderAll(); renderLayers(); snapshot();
-      templatePanel.hidden = true;
+      showPanel(null, null, true);
       inform('Template ditambahkan sebagai objek editable.');
     }
     function renderTemplates() {
@@ -347,10 +357,18 @@
       }).catch(() => inform('Gambar tidak dapat dibuka.'));
       reader.readAsDataURL(file);
     }
-    function showProperties() { root.classList.toggle('is-properties-open'); }
+    function showPanel(panel, trigger, restoreFocus = false) {
+      toolPanels.forEach(item => { item.hidden = item !== panel; });
+      const showProperties = panel === properties;
+      root.classList.toggle('is-properties-open', showProperties);
+      mobileLayers.setAttribute('aria-expanded', String(showProperties));
+      if (restoreFocus) panelTrigger?.focus();
+      panelTrigger = panel ? trigger : null;
+      panel?.querySelector('[data-action=panel-close]')?.focus({ preventScroll: true });
+    }
     root.addEventListener('click', event => {
       const shape = event.target.closest('[data-shape-type]');
-      if (shape && shapePanel.contains(shape)) { addShape(shape.dataset.shapeType); shapePanel.hidden=true; return; }
+      if (shape && shapePanel.contains(shape)) { addShape(shape.dataset.shapeType); showPanel(null, null, true); return; }
       const template = event.target.closest('[data-template-id]');
       if (template && templateList.contains(template)) { addTemplate(template.dataset.templateId); return; }
       const button = event.target.closest('[data-action]'); if (!button) return;
@@ -358,17 +376,20 @@
       if (action === 'undo') undo();
       else if (action === 'redo') redo();
       else if (action === 'download-preview') downloadPreview();
-      else if (action === 'add-text') addText();
-      else if (action === 'add-shape') { shapePanel.hidden=!shapePanel.hidden; templatePanel.hidden=true; }
-      else if (action === 'upload') fileInput.click();
-      else if (action === 'assets') { assetPanel.hidden=!assetPanel.hidden;shapePanel.hidden=true;templatePanel.hidden=true; }
+      else if (action === 'add-text') { showPanel(null); addText(); }
+      else if (action === 'add-shape') showPanel(shapePanel.hidden ? shapePanel : null, button);
+      else if (action === 'upload') { showPanel(null); fileInput.click(); }
+      else if (action === 'assets') showPanel(assetPanel.hidden ? assetPanel : null, button);
       else if (action === 'asset-search') searchAssets();
       else if (action === 'remove-background') removeFlatBackground();
       else if (action === 'duplicate') duplicate();
       else if (action === 'delete') remove();
-      else if (action === 'layers') showProperties();
-      else if (action === 'templates') { templatePanel.hidden = !templatePanel.hidden; shapePanel.hidden=true; }
-      else if (action === 'templates-close') templatePanel.hidden = true;
+      else if (action === 'layers') {
+        if (button === mobileLayers) showPanel(root.classList.contains('is-properties-open') ? null : properties, button);
+        else { showPanel(null); layers.scrollIntoView({ block: 'nearest' }); }
+      }
+      else if (action === 'templates') showPanel(templatePanel.hidden ? templatePanel : null, button);
+      else if (action === 'panel-close') showPanel(null, null, true);
       else if (action === 'align-left') align('left');
       else if (action === 'align-center') align('center');
       else if (action === 'align-right') align('right');
@@ -412,6 +433,7 @@
     canvas.on('selection:created', renderLayers); canvas.on('selection:updated', renderLayers); canvas.on('selection:cleared', renderLayers);
     root.addEventListener('keydown', event => {
       if(sharedView)return;
+      if (event.key === 'Escape' && panelTrigger) showPanel(null, null, true);
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo(); }
       if ((event.key === 'Delete' || event.key === 'Backspace') && !event.target.closest('input,textarea,[contenteditable=true]')) remove();
     });
