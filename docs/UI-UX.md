@@ -1,0 +1,5 @@
+# Proposed UI/UX — pending Owner visual review
+Mobile: dark compact header with brand, undo/redo, save; central transparent checkerboard artboard with pinch/pan; bottom toolbar Text, Image, Shapes, Assets, Templates, Layers; contextual bottom sheet for selected object; persistent CETAK DESAIN INI CTA outside canvas. Touch targets >=44 CSS px, safe-area support, no horizontal page overflow. Guest save opens login/register and preserves draft.
+Desktop: top header with undo/redo/save/print CTA; left asset/template/tool rail and expandable panel; central zoomable artboard; right properties and layer stack. Keyboard shortcuts, focus indicators, responsive collapse.
+Admin: top-level SANRO Design Maker; dashboard, assets, templates, fonts, providers, watermark, storage/quota, Studio Bridge, diagnostics. WordPress-native controls and capability checks.
+Visual direction: neutral workspace, dark header, high-contrast CTA, clear selected-object handles. No proprietary Canva/Adobe assets. This is a concept, not implemented UI.
