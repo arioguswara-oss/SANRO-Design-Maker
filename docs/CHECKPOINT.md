@@ -1,7 +1,7 @@
 # SANRO Design Maker V1 checkpoint
 
 - Integration branch: `develop`.
-- Last source SHA: `365f37233e728ffc421d161c2b5f1413b03e2358` (P0 implementation commit on `develop`).
+- Last source SHA: `d38b3cdf876adbbb393a8f87c9e72393ee78f2bf` (P0 implementation commit on `develop`).
 - Staging candidate under independent QA: `88491d4f2a4d90e88c3f14bc8e1ff12335a0c386` (0.2.0-dev). Owner supplied QA: ZIP checksum/integrity, WP install/activation and shortcode HTTP 200 PASS; Android image upload PASS; image drag/resize and responsive header FAIL.
 - Verified progress: 0.5% overall (unchanged). P0 regression tests cover coordinate math and source contracts, not real browser gestures.
 - Workspace: isolated source copy at `/home/sanro/projects/sanro-design-maker-exec`, not a Git checkout. Changes are published to `develop` through GitHub MCP with an expected-head check.
@@ -30,8 +30,8 @@
 - `node tests/mobile-interaction-contract.cjs`: PASS for source wiring and coordinate round-trip/handle math at 360, 390, 412 and 1440 CSS px. It does not simulate browser gestures.
 - Focused P0 suite (PHP lint/smoke/storage/provider/render; JS syntax/background pixel tests): PASS after the fix.
 - Owner-supplied pre-fix staging QA: install/activation/front-end HTTP 200 and Android upload PASS; drag/resize/header FAIL. Post-fix browser/staging regression: NOT TESTED; staging is untouched.
-- `0.2.1-dev` package: [TESTING ZIP](https://drive.google.com/file/d/142pzuYr9GL1j01jr19xWgfWtflQ2gGBm/view?usp=drivesdk) (212,929 bytes, SHA256 `952e6b49359ad0aae7df32a1258473389ab7916951fd1b15499e1c516f5927c7`); [SHA256 manifest](https://drive.google.com/file/d/1UowwGx3NsNVJa-8iZ7pVu3ZAEIdQ0jp8/view?usp=drivesdk); [release notes](https://docs.google.com/document/d/16gPlKHgE1fmYkkBGEQJNllGjqZx_JIDb/edit?usp=drivesdk&ouid=102665342940633303649&rtpof=true&sd=true).
-- ZIP root/CRC and filename checks PASS. Drive metadata confirms filename, 212,929-byte size, expected Releases parent and private owner-only sharing; remote SHA256 metadata unavailable (NOT VERIFIED).
+- `0.2.1-dev` package: [TESTING ZIP](https://drive.google.com/file/d/1MzGMTIt_9NHF30p4SpHoogGXsMCWacwC/view?usp=drivesdk) (212,943 bytes, SHA256 `0b273327a7f5c76b13c0c6aeff7e620c88b3a5d6858c1a2956f51c1fa2070692`); [SHA256 manifest](https://drive.google.com/file/d/1CCMFMWdIIrEjH3g7zoX2aEKphLo0GjJO/view?usp=drivesdk); [release notes](https://docs.google.com/document/d/1s8hOgOPE3xKh0okzCsbd3VwWBvmVxUYq/edit?usp=drivesdk&ouid=102665342940633303649&rtpof=true&sd=true).
+- ZIP root/CRC and filename checks PASS. Drive metadata confirms filename, 212,943-byte size, expected Releases parent and private owner-only sharing; remote SHA256 metadata unavailable (NOT VERIFIED).
 - Browser, WordPress REST/admin/storage, Openverse live search and raster output: NOT TESTED. Previously unavailable runners were not retried.
 
 ## Known issues and next tasks
