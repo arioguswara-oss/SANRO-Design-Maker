@@ -8,6 +8,7 @@ function sanro_dm_register_assets() {
     if (!wp_style_is('sanro-dm-editor', 'registered')) {
         wp_register_style('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.css', array(), SANRO_DM_VERSION);
         wp_register_style('sanro-dm-templates', SANRO_DM_URL . 'assets/templates.css', array('sanro-dm-editor'), SANRO_DM_VERSION);
+        wp_register_style('sanro-dm-shapes', SANRO_DM_URL . 'assets/shapes.css', array('sanro-dm-templates'), SANRO_DM_VERSION);
         wp_register_script('sanro-dm-fabric', SANRO_DM_URL . 'assets/vendor/fabric/index.min.js', array(), '7.4.0', true);
         wp_register_script('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.js', array('sanro-dm-fabric'), SANRO_DM_VERSION, true);
     }
@@ -20,6 +21,7 @@ function sanro_dm_enqueue_editor_assets() {
     sanro_dm_register_assets();
     wp_enqueue_style('sanro-dm-editor');
     wp_enqueue_style('sanro-dm-templates');
+    wp_enqueue_style('sanro-dm-shapes');
     wp_enqueue_script('sanro-dm-editor');
 }
 
@@ -27,6 +29,7 @@ function sanro_dm_render_editor() {
     sanro_dm_register_assets();
     wp_enqueue_style('sanro-dm-editor');
     wp_enqueue_style('sanro-dm-templates');
+    wp_enqueue_style('sanro-dm-shapes');
     wp_enqueue_script('sanro-dm-editor');
     ob_start();
     ?>
@@ -43,6 +46,11 @@ function sanro_dm_render_editor() {
       <section class="sanro-dm__template-panel" data-template-panel hidden aria-label="<?php echo esc_attr__('Editable starter templates', 'sanro-design-maker'); ?>">
         <div class="sanro-dm__template-heading"><strong>Template editable</strong><button type="button" data-action="templates-close" aria-label="<?php echo esc_attr__('Close templates', 'sanro-design-maker'); ?>">×</button></div>
         <div class="sanro-dm__template-list" data-template-list></div>
+      </section>
+      <section class="sanro-dm__shape-panel" data-shape-panel hidden aria-label="<?php echo esc_attr__('Choose a shape', 'sanro-design-maker'); ?>">
+        <strong>Bentuk</strong>
+        <button type="button" data-shape-type="rect">Persegi</button><button type="button" data-shape-type="circle">Lingkaran</button>
+        <button type="button" data-shape-type="triangle">Segitiga</button><button type="button" data-shape-type="line">Garis</button>
       </section>
       <div class="sanro-dm__workspace">
         <aside class="sanro-dm__rail" aria-label="<?php echo esc_attr__('Design tools', 'sanro-design-maker'); ?>">
