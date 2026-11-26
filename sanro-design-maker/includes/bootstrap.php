@@ -7,6 +7,7 @@ function sanro_dm_register_editor() {
 function sanro_dm_register_assets() {
     if (!wp_style_is('sanro-dm-editor', 'registered')) {
         wp_register_style('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.css', array(), SANRO_DM_VERSION);
+        wp_register_style('sanro-dm-templates', SANRO_DM_URL . 'assets/templates.css', array('sanro-dm-editor'), SANRO_DM_VERSION);
         wp_register_script('sanro-dm-fabric', SANRO_DM_URL . 'assets/vendor/fabric/index.min.js', array(), '7.4.0', true);
         wp_register_script('sanro-dm-editor', SANRO_DM_URL . 'assets/editor.js', array('sanro-dm-fabric'), SANRO_DM_VERSION, true);
     }
@@ -18,12 +19,14 @@ function sanro_dm_enqueue_editor_assets() {
     if (!$page || !has_shortcode($page->post_content, 'sanro_design_maker')) { return; }
     sanro_dm_register_assets();
     wp_enqueue_style('sanro-dm-editor');
+    wp_enqueue_style('sanro-dm-templates');
     wp_enqueue_script('sanro-dm-editor');
 }
 
 function sanro_dm_render_editor() {
     sanro_dm_register_assets();
     wp_enqueue_style('sanro-dm-editor');
+    wp_enqueue_style('sanro-dm-templates');
     wp_enqueue_script('sanro-dm-editor');
     ob_start();
     ?>
@@ -37,6 +40,10 @@ function sanro_dm_render_editor() {
           <a class="sanro-dm__print" href="<?php echo esc_url(home_url('/custom/')); ?>">CETAK DESAIN INI</a>
         </div>
       </header>
+      <section class="sanro-dm__template-panel" data-template-panel hidden aria-label="<?php echo esc_attr__('Editable starter templates', 'sanro-design-maker'); ?>">
+        <div class="sanro-dm__template-heading"><strong>Template editable</strong><button type="button" data-action="templates-close" aria-label="<?php echo esc_attr__('Close templates', 'sanro-design-maker'); ?>">×</button></div>
+        <div class="sanro-dm__template-list" data-template-list></div>
+      </section>
       <div class="sanro-dm__workspace">
         <aside class="sanro-dm__rail" aria-label="<?php echo esc_attr__('Design tools', 'sanro-design-maker'); ?>">
           <button type="button" data-action="add-text"><span aria-hidden="true">T</span>Text</button>
@@ -45,6 +52,7 @@ function sanro_dm_render_editor() {
           <button type="button" data-action="duplicate"><span aria-hidden="true">▢</span>Duplicate</button>
           <button type="button" data-action="delete"><span aria-hidden="true">⌫</span>Delete</button>
           <button type="button" data-action="layers"><span aria-hidden="true">☷</span>Layers</button>
+          <button type="button" data-action="templates"><span aria-hidden="true">▤</span>Templates</button>
           <input class="sanro-dm__file" type="file" accept="image/png,image/jpeg,image/webp" data-image-file aria-label="<?php echo esc_attr__('Choose a PNG, JPEG or WebP image', 'sanro-design-maker'); ?>">
         </aside>
         <section class="sanro-dm__stage-wrap" aria-label="<?php echo esc_attr__('Design canvas', 'sanro-design-maker'); ?>">
@@ -68,7 +76,7 @@ function sanro_dm_render_editor() {
       </div>
       <footer class="sanro-dm__mobile-tools" aria-label="Design tools">
         <button type="button" data-action="add-text">Text</button><button type="button" data-action="upload">Image</button>
-        <button type="button" data-action="add-shape">Shapes</button><button type="button" data-action="layers">Layers</button>
+        <button type="button" data-action="add-shape">Shapes</button><button type="button" data-action="templates">Templates</button><button type="button" data-action="layers">Layers</button>
       </footer>
       <a class="sanro-dm__mobile-print" href="<?php echo esc_url(home_url('/custom/')); ?>">CETAK DESAIN INI</a>
       <div class="sanro-dm__notice" data-notice role="status" aria-live="polite"></div>
